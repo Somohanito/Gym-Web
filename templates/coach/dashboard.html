@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold">Panel del Entrenador 🏋️‍♂️</h2>
+        <p class="text-muted">Asignación de rutinas y control de alumnos personalizados.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="p-3 bg-dark text-white rounded shadow-sm text-center">
+            <span class="d-block small text-uppercase">QR Maestro de Restablecimiento</span>
+            <span class="badge bg-warning text-dark fs-6 mt-1">{{ coach.qr_code }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-dark text-white fw-bold">Alumnos Asignados para Rutina y Dieta</div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Teléfono</th>
+                    <th>Estado de Rutina</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alumno in alumnos %}
+                <tr>
+                    <td class="fw-bold">{{ alumno.nombre }}</td>
+                    <td>{{ alumno.telefono }}</td>
+                    <td><span class="badge bg-info">Pendiente por Asignar</span></td>
+                    <td><button class="btn btn-sm btn-primary">+ Crear Rutina / Dieta</button></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-muted py-4">No hay alumnos personalizados registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

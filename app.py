@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for
 from config import Config
 from models import db, User
 from routes.auth import auth_bp, bcrypt
+from routes.admin import admin_bp  # <-- Importar admin_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -12,6 +13,7 @@ bcrypt.init_app(app)
 
 # Registrar Blueprints
 app.register_blueprint(auth_bp)
+app.register_blueprint(admin_bp)  # <-- Registrar admin_bp
 
 # Crear tablas y usuario Administrador inicial
 with app.app_context():

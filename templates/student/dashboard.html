@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow border-0 text-center mb-4">
+            <div class="card-body">
+                <h3 class="fw-bold">¡Hola, {{ student.nombre }}! 👋</h3>
+                <p class="text-muted mb-2">Tu membresía está <span class="badge bg-success">Al día</span></p>
+                <small class="text-muted d-block mb-3">Vence el: {{ student.fecha_vencimiento }}</small>
+                
+                <div class="p-3 bg-light rounded d-inline-block border">
+                    <span class="d-block text-uppercase small text-muted mb-1">Tu Código QR de Acceso</span>
+                    <span class="badge bg-dark fs-5 font-monospace">{{ student.qr_code }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRÓXIMAMENTE CHECKLIST EN MÓDULO 5 -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white fw-bold">Rutina Interactiva del Día</div>
+            <div class="card-body text-center py-4">
+                <p class="text-muted mb-0">Pronto tu coach asignará tu rutina y dieta con checklist interactivo.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
