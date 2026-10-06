@@ -8,17 +8,32 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">🏋️‍♂️ GymWeb</a>
-            {% if session.get('user_id') %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">🏋️‍♂️ GymWeb</a>
+        {% if session.get('user_id') %}
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                {% if session.get('role') == 'admin' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Panel Alumnos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.access_control') }}">📷 Control de Acceso QR</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.whatsapp_reminders') }}">📲 Recordatorios WhatsApp</a>
+                </li>
+                {% endif %}
+            </ul>
             <div class="d-flex align-items-center text-white">
-                <span class="me-3">{{ session.get('nombre') }} ({{ session.get('role') }})</span>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
+                <span class="me-3 small fw-bold">{{ session.get('nombre') }} ({{ session.get('role') }})</span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm">Salir</a>
             </div>
-            {% endif %}
         </div>
-    </nav>
+        {% endif %}
+    </div>
+</nav>
 
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}

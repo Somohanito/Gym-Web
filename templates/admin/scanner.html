@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-7 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">📷 Escáner de Acceso Kiosco</h5>
+                <span class="badge bg-success" id="camera-status">Cámara Activa</span>
+            </div>
+            <div class="card-body text-center p-4">
+                <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden;"></div>
+                
+                <!-- PANTALLA DE ESTADO DINÁMICA (VERDE / ROJA) -->
+                <div id="result-box" class="mt-4 p-4 rounded text-white d-none shadow">
+                    <h1 id="result-title" class="fw-bold display-6"></h1>
+                    <h3 id="result-name" class="mt-2"></h3>
+                    <p id="result-vencimiento" class="mb-0 fs-5"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-secondary text-white fw-bold">
+                📋 Últimos Accesos de Hoy
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush" id="attendance-list">
+                    {% for a in asistencias %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ a.student.nombre }}</strong>
+                            <small class="d-block text-muted">{{ a.timestamp.strftime('%H:%M:%S') }}</small>
+                        </div>
+                        <span class="badge {% if a.status == 'CONCEDIDO' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ a.status }}
+                        </span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-center text-muted py-3">No hay accesos registrados hoy.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    const resultBox = document.getElementById('result-box');
+    const resultTitle = document.getElementById('result-title');
+    const resultName = document.getElementById('result-name');
+    const resultVencimiento = document.getElementById('result-vencimiento');
+    let isProcessing = false;
+
+    function onScanSuccess(decodedText) {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        fetch('/admin/validate-qr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qr_code: decodedText })
+        })
+        .then(res => res.json())
+        .then(data => {
+            resultBox.classList.remove('d-none', 'bg-success', 'bg-danger');
+            
+            if (data.status === 'CONCEDIDO') {
+                resultBox.classList.add('bg-success');
+                resultTitle.innerText = "🟢 ACCESO CONCEDIDO";
+            } else {
+                resultBox.classList.add('bg-danger');
+                resultTitle.innerText = "🔴 ACCESO DENEGADO";
+            }
+            
+            resultName.innerText = data.nombre || 'Desconocido';
+            resultVencimiento.innerText = data.vencimiento ? `Vencimiento: ${data.vencimiento}` : data.message;
+
+            // Ocultar la pantalla después de 3.5 segundos para permitir el siguiente escaneo
+            setTimeout(() => {
+                resultBox.classList.add('d-none');
+                isProcessing = false;
+            }, 3500);
+        })
+        .catch(err => {
+            console.error(err);
+            isProcessing = false;
+        });
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess
+    ).catch(err => alert("Error iniciando la cámara: " + err));
+</script>
+{% endblock %}

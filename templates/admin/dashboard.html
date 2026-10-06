@@ -39,7 +39,7 @@
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold">Gestión de Alumnos</h3>
+    <h3 class="fw-bold">Gestión Integral de Alumnos</h3>
     <button class="btn btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#newStudentModal">+ Registrar Alumno</button>
 </div>
 
@@ -64,10 +64,10 @@
                             <tr>
                                 <th>Nombre</th>
                                 <th>Teléfono</th>
-                                <th>Código QR</th>
+                                <th>Código / Ver QR</th>
                                 <th>Vencimiento</th>
-                                <th>Estado</th>
-                                <th>Acción Switch</th>
+                                <th>Pruebas Admin</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -75,17 +75,61 @@
                             <tr>
                                 <td class="fw-bold">{{ alumno.nombre }}</td>
                                 <td>{{ alumno.telefono }}</td>
-                                <td><span class="badge bg-secondary font-monospace">{{ alumno.qr_code }}</span></td>
-                                <td>{{ alumno.fecha_vencimiento }}</td>
-                                <td><span class="badge {% if alumno.estado_pago == 'Al día' %}bg-success{% else %}bg-danger{% endif %}">{{ alumno.estado_pago }}</span></td>
                                 <td>
-                                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">Pasar a Personalizado ➡</button>
-                                    </form>
+                                    <button class="btn btn-sm btn-outline-dark fw-bold" data-bs-toggle="modal" data-bs-target="#qrModal{{ alumno.id }}">
+                                        📱 Ver QR
+                                    </button>
+                                </td>
+                                <td>
+                                    {{ alumno.fecha_vencimiento }}
+                                    {% if alumno.fecha_vencimiento < hoy %}
+                                        <span class="badge bg-danger ms-1">Vencido</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <!-- Botones de simulación para Admin -->
+                                    <div class="btn-group btn-group-sm">
+                                        <form action="{{ url_for('admin.simulate_expiration', student_id=alumno.id, mode='near') }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-warning btn-sm" title="Simular que vence en 2 días">⏳ 2 Días</button>
+                                        </form>
+                                        <form action="{{ url_for('admin.simulate_expiration', student_id=alumno.id, mode='expired') }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Simular vencido">🔴 Vencer</button>
+                                        </form>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Pasar a Personalizado ➡</button>
+                                        </form>
+                                        <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este alumno?');">
+                                            <button type="submit" class="btn btn-sm btn-danger">🗑️ Borrar</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
+
+                            <!-- MODAL DE VISUALIZACIÓN QR -->
+                            <div class="modal fade" id="qrModal{{ alumno.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered text-center">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-dark text-white">
+                                            <h5 class="modal-title">Código QR - {{ alumno.nombre }}</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body py-4">
+                                            <!-- QR Generado Dinámicamente por API pública -->
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ alumno.qr_code }}" alt="QR" class="img-fluid border p-2 rounded shadow-sm">
+                                            <p class="mt-3 font-monospace fw-bold text-muted">{{ alumno.qr_code }}</p>
+                                        </div>
+                                        <div class="modal-footer justify-content-center">
+                                            <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ alumno.qr_code }}" target="_blank" class="btn btn-success fw-bold">Descargar / Imprimir QR</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             {% else %}
-                            <tr><td colspan="6" class="text-center text-muted py-4">No hay alumnos generales en este momento.</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted py-4">No hay alumnos generales.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -105,9 +149,9 @@
                                 <th>Nombre</th>
                                 <th>Usuario</th>
                                 <th>Teléfono</th>
+                                <th>Ver QR</th>
                                 <th>Vencimiento</th>
-                                <th>Estado</th>
-                                <th>Acción Switch</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -116,16 +160,43 @@
                                 <td class="fw-bold">{{ alumno.nombre }}</td>
                                 <td><code>{{ alumno.username }}</code></td>
                                 <td>{{ alumno.telefono }}</td>
-                                <td>{{ alumno.fecha_vencimiento }}</td>
-                                <td><span class="badge {% if alumno.estado_pago == 'Al día' %}bg-success{% else %}bg-danger{% endif %}">{{ alumno.estado_pago }}</span></td>
                                 <td>
-                                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">⬅ Pasar a General</button>
-                                    </form>
+                                    <button class="btn btn-sm btn-outline-dark fw-bold" data-bs-toggle="modal" data-bs-target="#qrModalCustom{{ alumno.id }}">
+                                        📱 Ver QR
+                                    </button>
+                                </td>
+                                <td>{{ alumno.fecha_vencimiento }}</td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">⬅ Pasar a General</button>
+                                        </form>
+                                        <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este alumno?');">
+                                            <button type="submit" class="btn btn-sm btn-danger">🗑️ Borrar</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
+
+                            <div class="modal fade" id="qrModalCustom{{ alumno.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered text-center">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-dark text-white">
+                                            <h5 class="modal-title">Código QR - {{ alumno.nombre }}</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body py-4">
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ alumno.qr_code }}" alt="QR" class="img-fluid border p-2 rounded shadow-sm">
+                                            <p class="mt-3 font-monospace fw-bold text-muted">{{ alumno.qr_code }}</p>
+                                        </div>
+                                        <div class="modal-footer justify-content-center">
+                                            <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ alumno.qr_code }}" target="_blank" class="btn btn-success fw-bold">Descargar / Imprimir QR</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             {% else %}
-                            <tr><td colspan="6" class="text-center text-muted py-4">No hay alumnos personalizados en este momento.</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted py-4">No hay alumnos personalizados.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -135,7 +206,7 @@
     </div>
 </div>
 
-<!-- MODAL REGISTRO -->
+<!-- MODAL REGISTRO CON VALIDACIÓN DE TELÉFONO DE 10 DÍGITOS -->
 <div class="modal fade" id="newStudentModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -150,8 +221,9 @@
                         <input type="text" name="nombre" class="form-control" required placeholder="Ej: Carlos López">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label font-weight-bold">Teléfono (WhatsApp)</label>
-                        <input type="text" name="telefono" class="form-control" required placeholder="Ej: 9611234567">
+                        <label class="form-label font-weight-bold">Teléfono WhatsApp (10 dígitos exactos)</label>
+                        <input type="tel" name="telefono" pattern="[0-9]{10}" maxlength="10" minlength="10" class="form-control" required placeholder="Ej: 9611234567" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                        <small class="text-muted">Solo números. Ejemplo: 9611234567</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label font-weight-bold">Tipo de Alumno</label>
