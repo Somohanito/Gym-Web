@@ -26,7 +26,7 @@
                     <tr>
                         <td class="fw-bold">{{ a.nombre }}</td>
                         <td>{{ a.telefono }}</td>
-                        <td>{{ a.fecha_vencimiento }}</td>
+                        <td>{{ a.fecha_vencimiento.strftime('%d/%m/%Y') if a.fecha_vencimiento.strftime else a.fecha_vencimiento }}</td>
                         <td>
                             {% if a.fecha_vencimiento < hoy %}
                                 <span class="badge bg-danger">Vencido</span>
@@ -35,9 +35,12 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% set msj = "Hola " ~ a.nombre ~ "! 🏋️‍♂️ Te recordamos que tu membresia en GymWeb vence el " ~ a.fecha_vencimiento ~ ". ¡Te esperamos para renovar y seguir entrenando con todo!" %}
+                            {% set fecha_txt = a.fecha_vencimiento.strftime('%d/%m/%Y') if a.fecha_vencimiento.strftime else a.fecha_vencimiento %}
+                            {% set msj = "Hola " ~ a.nombre ~ "! Te recordamos que tu membresia en GymWeb vence el " ~ fecha_txt ~ ". Te esperamos para renovar y seguir entrenando!" %}
+                            
                             <a href="https://wa.me/52{{ a.telefono }}?text={{ msj | urlencode }}" 
                                target="_blank" 
+                               rel="noopener noreferrer"
                                class="btn btn-sm btn-success fw-bold">
                                 💬 Enviar WhatsApp
                             </a>

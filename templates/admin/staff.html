@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold">👨‍💼 Administración de Personal y QRs Maestros</h2>
+        <p class="text-muted mb-0">Crea o elimina cuentas para Entrenadores y Recepción, y descarga su QR Maestro de Autorización.</p>
+    </div>
+    <button class="btn btn-dark fw-bold" data-bs-toggle="modal" data-bs-target="#newStaffModal">+ Registrar Personal</button>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Teléfono</th>
+                        <th>QR Maestro de Autorización</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in staff %}
+                    <tr>
+                        <td class="fw-bold">{{ member.nombre }}</td>
+                        <td><code>{{ member.username }}</code></td>
+                        <td>
+                            <span class="badge {% if member.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
+                                {{ member.role | upper }}
+                            </span>
+                        </td>
+                        <td>{{ member.telefono }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#qrMasterModal{{ member.id }}">
+                                🔑 Ver QR Maestro
+                            </button>
+                        </td>
+                        <td>
+                            {% if member.id != session.get('user_id') %}
+                            <form action="{{ url_for('admin.delete_staff', staff_id=member.id) }}" method="POST" onsubmit="return confirm('¿Seguro de eliminar este miembro del personal?');">
+                                <button type="submit" class="btn btn-sm btn-danger">🗑️ Eliminar</button>
+                            </form>
+                            {% else %}
+                            <span class="badge bg-secondary">Tu Cuenta</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- MODAL QR MAESTRO -->
+                    <div class="modal fade" id="qrMasterModal{{ member.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered text-center">
+                            <div class="modal-content">
+                                <div class="modal-header bg-warning text-dark">
+                                    <h5 class="modal-title fw-bold">QR Maestro de Autorización - {{ member.nombre }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body py-4">
+                                    <p class="text-muted small">Muestra este código a los alumnos para autorizar el restablecimiento de su contraseña presencialmente.</p>
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ member.qr_code }}" alt="QR Maestro" class="img-fluid border p-2 rounded shadow-sm">
+                                    <p class="mt-3 font-monospace fw-bold text-dark">{{ member.qr_code }}</p>
+                                </div>
+                                <div class="modal-footer justify-content-center">
+                                    <a href="https://api.qrserver.com/v1/create-qr-code/?size=350x350&data={{ member.qr_code }}" target="_blank" class="btn btn-dark fw-bold">Imprimir QR Maestro</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL REGISTRO DE PERSONAL -->
+<div class="modal fade" id="newStaffModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('admin.create_staff') }}" method="POST">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Registrar Nuevo Usuario de Personal</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre Completo</label>
+                        <input type="text" name="nombre" class="form-control" required placeholder="Ej: Entrenador Roberto">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Teléfono (10 dígitos)</label>
+                        <input type="tel" name="telefono" pattern="[0-9]{10}" maxlength="10" class="form-control" required placeholder="Ej: 9611234567">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Rol en el Gimnasio</label>
+                        <select name="role" class="form-select">
+                            <option value="coach">Entrenador / Coach</option>
+                            <option value="admin">Administración / Recepción</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre de Usuario</label>
+                        <input type="text" name="username" class="form-control" required placeholder="Ej: coach_roberto">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Contraseña</label>
+                        <input type="password" name="password" class="form-control" required placeholder="Escribe la contraseña de acceso">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold">Crear Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

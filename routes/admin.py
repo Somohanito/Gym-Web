@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from models import db, User, Attendance
+from flask_bcrypt import Bcrypt
 from datetime import datetime, timedelta
 import uuid
 import re
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+bcrypt = Bcrypt()
 
 def admin_required(f):
     def decorated_function(*args, **kwargs):
@@ -34,6 +36,57 @@ def dashboard():
                            vencidos=vencidos,
                            hoy=hoy)
 
+# --- GESTIÓN DE PERSONAL Y COACHES (ADMIN PADRE) ---
+@admin_bp.route('/staff')
+@admin_required
+def staff_management():
+    staff_members = User.query.filter(User.role.in_(['admin', 'coach'])).all()
+    return render_template('admin/staff.html', staff=staff_members)
+
+@admin_bp.route('/staff/create', methods=['POST'])
+@admin_required
+def create_staff():
+    nombre = request.form.get('nombre')
+    telefono = request.form.get('telefono', '').strip()
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password')
+    role = request.form.get('role') # 'admin' o 'coach'
+    
+    if User.query.filter_by(username=username).first():
+        flash('El nombre de usuario ya está registrado.', 'warning')
+        return redirect(url_for('admin.staff_management'))
+        
+    qr_maestro = f"MASTER-{role.upper()}-{uuid.uuid4().hex[:8].upper()}"
+    pwd_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+    
+    nuevo_staff = User(
+        nombre=nombre,
+        telefono=telefono,
+        username=username,
+        password_hash=pwd_hash,
+        role=role,
+        qr_code=qr_maestro
+    )
+    
+    db.session.add(nuevo_staff)
+    db.session.commit()
+    flash(f'Cuenta de {role.capitalize()} creada con éxito. QR Maestro: {qr_maestro}', 'success')
+    return redirect(url_for('admin.staff_management'))
+
+@admin_bp.route('/staff/delete/<int:staff_id>', methods=['POST'])
+@admin_required
+def delete_staff(staff_id):
+    staff = User.query.get_or_404(staff_id)
+    if staff.id == session.get('user_id'):
+        flash('No puedes eliminar tu propia cuenta de Administrador.', 'danger')
+        return redirect(url_for('admin.staff_management'))
+        
+    db.session.delete(staff)
+    db.session.commit()
+    flash('Cuenta de personal eliminada correctamente.', 'info')
+    return redirect(url_for('admin.staff_management'))
+
+# --- MANTENEMOS TUS RUTAS EXISTENTES ---
 @admin_bp.route('/student/create', methods=['POST'])
 @admin_required
 def create_student():
@@ -43,7 +96,6 @@ def create_student():
     dias_membresia = int(request.form.get('dias_membresia', 30))
     monto = float(request.form.get('monto', 0.0))
     
-    # Validar que el teléfono sean solo 10 dígitos numéricos
     if not re.match(r'^\d{10}$', telefono):
         flash('El número de teléfono debe contener exactamente 10 dígitos numéricos.', 'danger')
         return redirect(url_for('admin.dashboard'))
@@ -55,7 +107,6 @@ def create_student():
     role = 'student_custom' if is_custom else 'student_general'
     username = telefono if is_custom else None
     
-    # Verificar usuario duplicado
     if is_custom and User.query.filter_by(username=username).first():
         flash('Ya existe un alumno registrado con ese número de teléfono.', 'warning')
         return redirect(url_for('admin.dashboard'))
@@ -80,9 +131,7 @@ def create_student():
 @admin_bp.route('/student/delete/<int:student_id>', methods=['POST'])
 @admin_required
 def delete_student(student_id):
-    """Elimina permanentemente a un alumno"""
     student = User.query.get_or_404(student_id)
-    # Eliminar asistencias asociadas
     Attendance.query.filter_by(student_id=student.id).delete()
     db.session.delete(student)
     db.session.commit()
@@ -109,7 +158,6 @@ def toggle_student_type(student_id):
 @admin_bp.route('/student/simulate-expiration/<int:student_id>/<string:mode>', methods=['POST'])
 @admin_required
 def simulate_expiration(student_id, mode):
-    """Herramienta de prueba para Admin: cambia la fecha a vencida o por vencer"""
     student = User.query.get_or_404(student_id)
     hoy = datetime.now().date()
     
@@ -130,7 +178,6 @@ def simulate_expiration(student_id, mode):
 @admin_bp.route('/access-control')
 @admin_required
 def access_control():
-    """Control de Acceso QR en Recepción"""
     today = datetime.now().date()
     asistencias = Attendance.query.filter(
         db.func.date(Attendance.timestamp) == today

@@ -2,43 +2,66 @@
 
 {% block content %}
 <div class="row mb-4">
-    <div class="col-md-8">
-        <h2 class="fw-bold">Panel del Entrenador 🏋️‍♂️</h2>
-        <p class="text-muted">Asignación de rutinas y control de alumnos personalizados.</p>
+    <div class="col-md-7">
+        <h2 class="fw-bold">Panel de Entrenadores 🏋️‍♂️</h2>
+        <p class="text-muted">Diseña rutinas y planes de alimentación para tus alumnos personalizados.</p>
     </div>
-    <div class="col-md-4 text-end">
-        <div class="p-3 bg-dark text-white rounded shadow-sm text-center">
-            <span class="d-block small text-uppercase">QR Maestro de Restablecimiento</span>
-            <span class="badge bg-warning text-dark fs-6 mt-1">{{ coach.qr_code }}</span>
+    <div class="col-md-5 text-end">
+        <div class="p-3 bg-dark text-white rounded shadow-sm text-center border-start border-warning border-4">
+            <span class="d-block small text-uppercase text-warning fw-bold">Tu QR Maestro de Autorización</span>
+            <button class="btn btn-sm btn-warning fw-bold mt-2" data-bs-toggle="modal" data-bs-target="#coachMasterQr">
+                🔑 Mostrar QR para Cambiar Contraseñas
+            </button>
         </div>
     </div>
 </div>
 
 <div class="card shadow-sm border-0">
-    <div class="card-header bg-dark text-white fw-bold">Alumnos Asignados para Rutina y Dieta</div>
+    <div class="card-header bg-dark text-white fw-bold">Alumnos Personalizados Asignados</div>
     <div class="card-body p-0">
         <table class="table table-hover align-middle mb-0">
-            <thead>
+            <thead class="table-dark">
                 <tr>
                     <th>Alumno</th>
-                    <th>Teléfono</th>
-                    <th>Estado de Rutina</th>
-                    <th>Acción</th>
+                    <th>Teléfono / Usuario</th>
+                    <th>Estado Membresía</th>
+                    <th>Asignación</th>
                 </tr>
             </thead>
             <tbody>
                 {% for alumno in alumnos %}
                 <tr>
                     <td class="fw-bold">{{ alumno.nombre }}</td>
-                    <td>{{ alumno.telefono }}</td>
-                    <td><span class="badge bg-info">Pendiente por Asignar</span></td>
-                    <td><button class="btn btn-sm btn-primary">+ Crear Rutina / Dieta</button></td>
+                    <td><code>{{ alumno.username }}</code></td>
+                    <td><span class="badge bg-success">{{ alumno.estado_pago }}</span></td>
+                    <td>
+                        <a href="{{ url_for('coach.assign_routine', student_id=alumno.id) }}" class="btn btn-sm btn-primary fw-bold">
+                            + Crear / Editar Rutina y Dieta
+                        </a>
+                    </td>
                 </tr>
                 {% else %}
                 <tr><td colspan="4" class="text-center text-muted py-4">No hay alumnos personalizados registrados.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- MODAL QR MAESTRO DEL COACH -->
+<div class="modal fade" id="coachMasterQr" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered text-center">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold">QR Maestro - {{ coach.nombre }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="text-muted small">Escanea este código desde el teléfono del alumno en la pantalla de "¿Olvidaste tu contraseña?" para darle acceso inmediato.</p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ coach.qr_code }}" alt="QR Maestro Coach" class="img-fluid border p-2 rounded shadow-sm">
+                <p class="mt-3 font-monospace fw-bold text-dark">{{ coach.qr_code }}</p>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
