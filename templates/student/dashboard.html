@@ -2,27 +2,122 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-5">
+        <!-- TARJETA DEL ALUMNO -->
         <div class="card shadow border-0 text-center mb-4">
             <div class="card-body">
                 <h3 class="fw-bold">¡Hola, {{ student.nombre }}! 👋</h3>
-                <p class="text-muted mb-2">Tu membresía está <span class="badge bg-success">Al día</span></p>
+                <span class="badge bg-success mb-2">Membresía Al Día</span>
                 <small class="text-muted d-block mb-3">Vence el: {{ student.fecha_vencimiento }}</small>
                 
                 <div class="p-3 bg-light rounded d-inline-block border">
-                    <span class="d-block text-uppercase small text-muted mb-1">Tu Código QR de Acceso</span>
-                    <span class="badge bg-dark fs-5 font-monospace">{{ student.qr_code }}</span>
+                    <span class="d-block text-uppercase small text-muted mb-1">Tu Acceso QR</span>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ student.qr_code }}" alt="QR" class="img-fluid border p-1 rounded">
+                    <span class="badge bg-dark d-block mt-2 font-monospace">{{ student.qr_code }}</span>
                 </div>
             </div>
         </div>
 
-        <!-- PRÓXIMAMENTE CHECKLIST EN MÓDULO 5 -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white fw-bold">Rutina Interactiva del Día</div>
-            <div class="card-body text-center py-4">
-                <p class="text-muted mb-0">Pronto tu coach asignará tu rutina y dieta con checklist interactivo.</p>
+        <!-- SECCIÓN DE RUTINAS CON CHECKLIST -->
+        <h4 class="fw-bold mb-3">🏋️‍♂️ Tu Rutina Diaria</h4>
+
+        {% for r in rutinas %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center fw-bold">
+                <span>Día: {{ r.dia_semana }}</span>
+                {% if r.completado %}
+                    <span class="badge bg-success">Completado ✅</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <!-- EJERCICIOS -->
+                <h6 class="fw-bold text-primary mb-2">💪 Ejercicios del Día:</h6>
+                <div class="routine-group mb-3" id="routine-group-{{ r.id }}">
+                    {% for ej in r.ejercicios_list %}
+                    <div class="form-check mb-2">
+                        <input class="form-check-input check-task" type="checkbox" id="ej-{{ r.id }}-{{ loop.index }}" data-routine="{{ r.id }}">
+                        <label class="form-check-label" for="ej-{{ r.id }}-{{ loop.index }}">{{ ej }}</label>
+                    </div>
+                    {% endfor %}
+
+                    <!-- DIETA / COMIDAS -->
+                    {% if r.comidas_list %}
+                    <h6 class="fw-bold text-success mt-3 mb-2">🥗 Plan de Alimentación:</h6>
+                    {% for com in r.comidas_list %}
+                    <div class="form-check mb-2">
+                        <input class="form-check-input check-task" type="checkbox" id="com-{{ r.id }}-{{ loop.index }}" data-routine="{{ r.id }}">
+                        <label class="form-check-label" for="com-{{ r.id }}-{{ loop.index }}">{{ com }}</label>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- BOTÓN DE COMPLETAR (BLOQUEADO HASTA CUMPLIR EL 100%) -->
+                {% if not r.completado %}
+                <button class="btn btn-secondary w-100 fw-bold btn-complete" id="btn-complete-{{ r.id }}" disabled onclick="finishWorkout('{{ r.id }}')">
+                    🔒 Marca todas las casillas para completar
+                </button>
+                {% else %}
+                <button class="btn btn-outline-success w-100 fw-bold" disabled>
+                    ✅ Entrenamiento Registrado
+                </button>
+                {% endif %}
             </div>
         </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            Aún no tienes rutinas asignadas por tu coach. ¡Pídesela hoy en tu entrenamiento!
+        </div>
+        {% endfor %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const checkboxes = document.querySelectorAll('.check-task');
+
+        checkboxes.forEach(chk => {
+            chk.addEventListener('change', (e) => {
+                const routineId = e.target.getAttribute('data-routine');
+                validateChecklist(routineId);
+            });
+        });
+    });
+
+    function validateChecklist(routineId) {
+        const group = document.getElementById(`routine-group-${routineId}`);
+        const allChecks = group.querySelectorAll('.check-task');
+        const btn = document.getElementById(`btn-complete-${routineId}`);
+
+        let allChecked = true;
+        allChecks.forEach(c => {
+            if (!c.checked) allChecked = false;
+        });
+
+        if (allChecked && allChecks.length > 0) {
+            btn.disabled = false;
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-success');
+            btn.innerText = "🚀 ¡Completar Entrenamiento!";
+        } else {
+            btn.disabled = true;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-secondary');
+            btn.innerText = "🔒 Marca todas las casillas para completar";
+        }
+    }
+
+    function finishWorkout(routineId) {
+        fetch(`/student/complete-workout/${routineId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                alert(data.message);
+                window.location.reload();
+            }
+        });
+    }
+</script>
 {% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow border-0">
+            <div class="card-header bg-dark text-white fw-bold">
+                🏋️‍♂️ Asignar Rutina y Dieta a: {{ student.nombre }}
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Día del Entrenamiento</label>
+                        <select name="dia_semana" class="form-select">
+                            <option value="Lunes">Lunes</option>
+                            <option value="Martes">Martes</option>
+                            <option value="Miércoles">Miércoles</option>
+                            <option value="Jueves">Jueves</option>
+                            <option value="Viernes">Viernes</option>
+                            <option value="Sábado">Sábado</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Ejercicios (1 por línea)</label>
+                        <textarea name="ejercicios" class="form-control" rows="4" required placeholder="Ejemplo:&#10;4x12 Sentadillas con barra&#10;3x15 Prensa de piernas&#10;4x10 Zancadas walk"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Plan de Alimentación / Comidas (1 por línea)</label>
+                        <textarea name="comidas" class="form-control" rows="4" placeholder="Ejemplo:&#10;Desayuno: 3 huevos + 100g avena&#10;Almuerzo: 200g pechuga de pollo + arroz&#10;Cena: Ensalada con atún"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('coach.dashboard') }}" class="btn btn-secondary">Volver</a>
+                        <button type="submit" class="btn btn-success fw-bold">Guardar y Asignar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
