@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h3>Restablecer Contraseña</h3>
+                <p class="text-muted small">Pídele al Entrenador o Recepción que muestre su QR Maestro</p>
+
+                <div class="mb-3 text-start">
+                    <label class="form-label">Tu Usuario</label>
+                    <input type="text" id="username" class="form-control" placeholder="Ingresa tu usuario">
+                </div>
+
+                <div class="mb-3 text-start">
+                    <label class="form-label">Nueva Contraseña</label>
+                    <input type="password" id="new_password" class="form-control" placeholder="Escribe tu nueva contraseña">
+                </div>
+
+                <button id="btn-scan" class="btn btn-warning w-100 mb-3">Escanear QR Maestro de Autorización</button>
+
+                <div id="reader" style="width: 100%; min-height: 250px; display: none;" class="mb-3"></div>
+                <div id="status-msg"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    const btnScan = document.getElementById('btn-scan');
+    const readerDiv = document.getElementById('reader');
+    const statusMsg = document.getElementById('status-msg');
+
+    btnScan.addEventListener('click', () => {
+        const username = document.getElementById('username').value;
+        const newPassword = document.getElementById('new_password').value;
+
+        if (!username || !newPassword) {
+            alert('Por favor completa tu usuario y nueva contraseña antes de escanear.');
+            return;
+        }
+
+        readerDiv.style.display = 'block';
+        const html5QrCode = new Html5Qrcode("reader");
+
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            (qrCodeMessage) => {
+                html5QrCode.stop();
+                readerDiv.style.display = 'none';
+                
+                fetch('/reset-password-qr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        new_password: newPassword,
+                        master_qr: qrCodeMessage
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        statusMsg.innerHTML = `<div class="alert alert-success mt-3">${data.message}. Redirigiendo...</div>`;
+                        setTimeout(() => window.location.href = '/login', 2000);
+                    } else {
+                        statusMsg.innerHTML = `<div class="alert alert-danger mt-3">${data.message}</div>`;
+                    }
+                });
+            }
+        ).catch(err => alert("Error al abrir cámara: " + err));
+    });
+</script>
+{% endblock %}
