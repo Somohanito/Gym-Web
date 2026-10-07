@@ -1,61 +1,59 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold">📲 Recordatorios por WhatsApp</h2>
-        <p class="text-muted mb-0">Envío de mensajes directos para renovación de mensualidades.</p>
+<div class="row mb-4 align-items-center animate-fade-up">
+    <div class="col-md-8">
+        <h3 class="fw-bold text-white mb-1">📲 Recordatorios por WhatsApp</h3>
+        <p class="text-muted small mb-0">Envío directo de mensajes personalizados para renovación de mensualidades.</p>
     </div>
 </div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Alumno</th>
-                        <th>Teléfono</th>
-                        <th>Fecha Vencimiento</th>
-                        <th>Estado</th>
-                        <th>Enviar Recordatorio</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for a in alumnos %}
-                    <tr>
-                        <td class="fw-bold">{{ a.nombre }}</td>
-                        <td>{{ a.telefono }}</td>
-                        <td>{{ a.fecha_vencimiento.strftime('%d/%m/%Y') if a.fecha_vencimiento.strftime else a.fecha_vencimiento }}</td>
-                        <td>
-                            {% if a.fecha_vencimiento < hoy %}
-                                <span class="badge bg-danger">Vencido</span>
-                            {% else %}
-                                <span class="badge bg-warning text-dark">Por Vencer</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% set fecha_txt = a.fecha_vencimiento.strftime('%d/%m/%Y') if a.fecha_vencimiento.strftime else a.fecha_vencimiento %}
-                            {% set msj = "Hola " ~ a.nombre ~ "! Te recordamos que tu membresia en GymWeb vence el " ~ fecha_txt ~ ". Te esperamos para renovar y seguir entrenando!" %}
-                            
-                            <a href="https://wa.me/52{{ a.telefono }}?text={{ msj | urlencode }}" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               class="btn btn-sm btn-success fw-bold">
-                                💬 Enviar WhatsApp
-                            </a>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            🎉 ¡Excelente! No hay alumnos por vencer en los próximos días.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<div class="card card-glass overflow-hidden animate-fade-up delay-1">
+    <div class="table-responsive">
+        <table class="table table-minimal">
+            <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Teléfono</th>
+                    <th>Fecha Vencimiento</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in alumnos %}
+                <tr>
+                    <td class="fw-bold text-white">{{ a.nombre }}</td>
+                    <td class="text-muted">{{ a.telefono }}</td>
+                    <td class="text-white">{{ a.fecha_vencimiento }}</td>
+                    <td>
+                        {% if a.fecha_vencimiento and a.fecha_vencimiento < hoy %}
+                            <span class="badge bg-danger shadow-sm">Vencido</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark shadow-sm">Por Vencer</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set fecha_txt = a.fecha_vencimiento %}
+                        {% set msj = "Hola " ~ a.nombre ~ "! Te recordamos que tu membresia en " ~ gym_name ~ " vence el " ~ fecha_txt ~ ". Te esperamos para renovar y seguir entrenando!" %}
+                        
+                        <a href="https://api.whatsapp.com/send?phone=52{{ a.telefono }}&text={{ msj | urlencode }}" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="btn btn-sm btn-success fw-bold d-inline-flex align-items-center gap-1 shadow-sm">
+                            💬 Enviar WhatsApp
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        🎉 ¡Excelente! No hay alumnos por vencer ni vencidos en este momento.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

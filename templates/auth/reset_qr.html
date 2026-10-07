@@ -3,25 +3,29 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body text-center">
-                <h3>Restablecer Contraseña</h3>
-                <p class="text-muted small">Pídele al Entrenador o Recepción que muestre su QR Maestro</p>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 text-center">
+                <h3 class="fw-bold mb-2">Restablecer Contraseña</h3>
+                <p class="text-muted small mb-4">Ingresa tu usuario/teléfono y pide al Entrenador o Recepción su QR Maestro.</p>
 
                 <div class="mb-3 text-start">
-                    <label class="form-label">Tu Usuario</label>
-                    <input type="text" id="username" class="form-control" placeholder="Ingresa tu usuario">
+                    <label class="form-label fw-bold">Tu Usuario o Teléfono</label>
+                    <input type="text" id="username" class="form-control" placeholder="Ej: 9611234567">
                 </div>
 
                 <div class="mb-3 text-start">
-                    <label class="form-label">Nueva Contraseña</label>
+                    <label class="form-label fw-bold">Nueva Contraseña</label>
                     <input type="password" id="new_password" class="form-control" placeholder="Escribe tu nueva contraseña">
                 </div>
 
-                <button id="btn-scan" class="btn btn-warning w-100 mb-3">Escanear QR Maestro de Autorización</button>
+                <button id="btn-scan" class="btn btn-warning w-100 fw-bold py-2 mb-3">Escanear QR Maestro de Autorización</button>
 
-                <div id="reader" style="width: 100%; min-height: 250px; display: none;" class="mb-3"></div>
+                <div id="reader" style="width: 100%; min-height: 250px; display: none;" class="mb-3 rounded overflow-hidden"></div>
                 <div id="status-msg"></div>
+
+                <div class="text-center border-top pt-3 mt-3">
+                    <a href="{{ url_for('auth.login') }}" class="text-decoration-none small text-muted">← Volver al inicio de sesión</a>
+                </div>
             </div>
         </div>
     </div>
@@ -36,44 +40,62 @@
     const statusMsg = document.getElementById('status-msg');
 
     btnScan.addEventListener('click', () => {
-        const username = document.getElementById('username').value;
-        const newPassword = document.getElementById('new_password').value;
+        const username = document.getElementById('username').value.trim();
+        const newPassword = document.getElementById('new_password').value.trim();
 
         if (!username || !newPassword) {
-            alert('Por favor completa tu usuario y nueva contraseña antes de escanear.');
+            statusMsg.innerHTML = `<div class="alert alert-warning">Por favor ingresa tu usuario/teléfono y la nueva contraseña antes de escanear.</div>`;
             return;
         }
 
-        readerDiv.style.display = 'block';
-        const html5QrCode = new Html5Qrcode("reader");
-
-        html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: 250 },
-            (qrCodeMessage) => {
-                html5QrCode.stop();
-                readerDiv.style.display = 'none';
-                
-                fetch('/reset-password-qr', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: username,
-                        new_password: newPassword,
-                        master_qr: qrCodeMessage
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.success) {
-                        statusMsg.innerHTML = `<div class="alert alert-success mt-3">${data.message}. Redirigiendo...</div>`;
-                        setTimeout(() => window.location.href = '/login', 2000);
-                    } else {
-                        statusMsg.innerHTML = `<div class="alert alert-danger mt-3">${data.message}</div>`;
-                    }
-                });
+        // 1. Verificar si el usuario existe en la base de datos antes de abrir la cámara
+        fetch('/check-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.exists) {
+                statusMsg.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                return;
             }
-        ).catch(err => alert("Error al abrir cámara: " + err));
+
+            statusMsg.innerHTML = `<div class="alert alert-info">Usuario confirmado: <strong>${data.nombre}</strong>. Escanea el QR Maestro ahora.</div>`;
+            readerDiv.style.display = 'block';
+
+            // 2. Iniciar la cámara para escanear el QR Maestro
+            const html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                (qrCodeMessage) => {
+                    html5QrCode.stop();
+                    readerDiv.style.display = 'none';
+                    
+                    fetch('/reset-password-qr', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: username,
+                            new_password: newPassword,
+                            master_qr: qrCodeMessage
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(resData => {
+                        if(resData.success) {
+                            statusMsg.innerHTML = `<div class="alert alert-success mt-3">${resData.message} Redirigiendo...</div>`;
+                            setTimeout(() => window.location.href = '/login', 2000);
+                        } else {
+                            statusMsg.innerHTML = `<div class="alert alert-danger mt-3">${resData.message}</div>`;
+                        }
+                    });
+                }
+            ).catch(err => {
+                alert("Error al abrir la cámara: " + err);
+            });
+        });
     });
 </script>
 {% endblock %}

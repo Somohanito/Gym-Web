@@ -1,65 +1,95 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row mb-4">
+<div class="row mb-4 align-items-center animate-fade-up">
     <div class="col-md-7">
-        <h2 class="fw-bold">Panel de Entrenadores 🏋️‍♂️</h2>
-        <p class="text-muted">Diseña rutinas y planes de alimentación para tus alumnos personalizados.</p>
+        <h3 class="fw-bold text-white mb-1">Panel de Entrenadores 🏋️‍♂️</h3>
+        <p class="text-muted small mb-0">Seguimiento en tiempo real del cumplimiento, racha y rendimiento semanal de los alumnos.</p>
     </div>
     <div class="col-md-5 text-end">
-        <div class="p-3 bg-dark text-white rounded shadow-sm text-center border-start border-warning border-4">
-            <span class="d-block small text-uppercase text-warning fw-bold">Tu QR Maestro de Autorización</span>
-            <button class="btn btn-sm btn-warning fw-bold mt-2" data-bs-toggle="modal" data-bs-target="#coachMasterQr">
-                🔑 Mostrar QR para Cambiar Contraseñas
-            </button>
-        </div>
+        <button class="btn btn-outline-warning border-warning text-warning fw-bold px-3 py-2" style="border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#coachMasterQr">
+            🔑 QR Maestro de Autorización
+        </button>
     </div>
 </div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-dark text-white fw-bold">Alumnos Personalizados Asignados</div>
-    <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
+<div class="card card-glass overflow-hidden animate-fade-up delay-1">
+    <div class="table-responsive">
+        <table class="table table-minimal">
+            <thead>
                 <tr>
                     <th>Alumno</th>
-                    <th>Teléfono / Usuario</th>
-                    <th>Estado Membresía</th>
-                    <th>Asignación</th>
+                    <th>Rendimiento & Racha</th>
+                    <th style="min-width: 220px;">Cumplimiento Rutinas</th>
+                    <th>Estado Semanal</th>
+                    <th>Acción</th>
                 </tr>
             </thead>
             <tbody>
-                {% for alumno in alumnos %}
+                {% for item in alumnos_data %}
                 <tr>
-                    <td class="fw-bold">{{ alumno.nombre }}</td>
-                    <td><code>{{ alumno.username }}</code></td>
-                    <td><span class="badge bg-success">{{ alumno.estado_pago }}</span></td>
                     <td>
-                        <a href="{{ url_for('coach.assign_routine', student_id=alumno.id) }}" class="btn btn-sm btn-primary fw-bold">
-                            + Crear / Editar Rutina y Dieta
+                        <span class="fw-bold text-white d-block fs-6">{{ item.alumno.nombre }}</span>
+                        <code class="small text-muted">{{ item.alumno.username }}</code>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-dark bg-opacity-75 border border-warning text-warning py-1 px-2">
+                                🔥 {{ item.alumno.racha_dias }} Días de Racha
+                            </span>
+                            <span class="badge bg-dark bg-opacity-75 border border-info text-info py-1 px-2">
+                                📊 {{ item.alumno.dias_entrenados_semana }} Días esta Semana
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress w-100" style="height: 8px; background: #1a2333; border-radius: 4px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ item.porcentaje }}%;" aria-valuenow="{{ item.porcentaje }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <span class="small fw-bold text-white">{{ item.porcentaje }}%</span>
+                        </div>
+                        <small class="text-muted" style="font-size: 0.75rem;">{{ item.completadas }} de {{ item.total_rutinas }} asignadas completadas</small>
+                    </td>
+                    <td>
+                        {% if item.porcentaje == 100 and item.total_rutinas > 0 %}
+                            <span class="badge bg-success shadow-sm">Completado 🚀</span>
+                        {% elif item.porcentaje > 0 %}
+                            <span class="badge bg-warning text-dark shadow-sm">En Progreso ⏳</span>
+                        {% else %}
+                            <span class="badge bg-secondary bg-opacity-50">Sin Iniciar</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('coach.assign_routine', student_id=item.alumno.id) }}" class="btn btn-indigo btn-sm fw-bold">
+                            + Rutina / Dieta
                         </a>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="4" class="text-center text-muted py-4">No hay alumnos personalizados registrados.</td></tr>
+                <tr><td colspan="5" class="text-center text-muted py-4">No hay alumnos personalizados registrados bajo tu supervisión.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- MODAL QR MAESTRO DEL COACH -->
-<div class="modal fade" id="coachMasterQr" tabindex="-1">
+<div class="modal fade" id="coachMasterQr" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered text-center">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold">QR Maestro - {{ coach.nombre }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-content card-glass text-white p-3">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title fw-bold text-warning">QR Maestro de Autorización</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body py-4">
-                <p class="text-muted small">Escanea este código desde el teléfono del alumno en la pantalla de "¿Olvidaste tu contraseña?" para darle acceso inmediato.</p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ coach.qr_code }}" alt="QR Maestro Coach" class="img-fluid border p-2 rounded shadow-sm">
-                <p class="mt-3 font-monospace fw-bold text-dark">{{ coach.qr_code }}</p>
+                <p class="text-muted small mb-3">Muestra este código al alumno para autorizar el restablecimiento o cambio de su contraseña presencialmente.</p>
+                <div class="bg-white p-3 rounded-3 d-inline-block shadow-sm">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ coach.qr_code }}" alt="QR Maestro" class="img-fluid d-block mx-auto">
+                </div>
+                <p class="font-monospace text-warning fw-bold mt-3 mb-0" style="font-size: 0.9rem;">{{ coach.qr_code }}</p>
+            </div>
+            <div class="modal-footer border-top border-secondary justify-content-center">
+                <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>

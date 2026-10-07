@@ -1,26 +1,52 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h3 class="card-title text-center mb-4">Iniciar Sesión</h3>
-                <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">Usuario / Teléfono</label>
-                        <input type="text" name="username" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Contraseña</label>
-                        <input type="password" name="password" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100 mb-3">Ingresar</button>
-                </form>
-                <div class="text-center">
-                    <a href="{{ url_for('auth.reset_password_qr') }}" class="text-muted small">¿Olvidaste tu contraseña? (Restablecer con QR Maestro)</a>
-                </div>
+<!-- CONTENEDOR DE FONDO CON IMAGEN Y CRISTAL ESMERILADO -->
+<div class="login-page-bg">
+    <div class="login-glass-card animate-fade-up">
+        
+        <!-- LOGO Y TÍTULO DE GYMWEB -->
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle mb-2" style="background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4);">
+                <span style="font-size: 2rem;">⚡</span>
             </div>
+            <h3 class="fw-bold text-white mb-1">Bienvenido a <span style="color: #818cf8;">GymWeb</span></h3>
+            <p class="text-light small opacity-75">Ingresa tus credenciales para acceder a la plataforma</p>
+        </div>
+
+        <!-- ALERTAS DE FLASK -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show p-2 small mb-3 text-start" role="alert" style="border-radius: 10px;">
+                {{ message }}
+                <button type="button" class="btn-close btn-close-white p-2" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- FORMULARIO DE ACCESO -->
+        <form action="{{ url_for('auth.login') }}" method="POST">
+            <div class="form-floating mb-3">
+                <input type="text" name="username" class="form-control glass-input" id="loginUser" placeholder="Usuario o Teléfono" required autocomplete="off">
+                <label for="loginUser"><span class="me-2">👤</span>Usuario o Teléfono (10 dígitos)</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="password" name="password" class="form-control glass-input" id="loginPass" placeholder="Contraseña" required>
+                <label for="loginPass"><span class="me-2">🔒</span>Contraseña</label>
+            </div>
+
+            <button type="submit" class="btn btn-indigo w-100 fw-bold py-3 mt-2 shadow-lg" style="font-size: 1rem; letter-spacing: 0.5px;">
+                Iniciar Sesión
+            </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top border-white border-opacity-10">
+            <a href="{{ url_for('auth.reset_password_qr') }}" class="text-light text-decoration-none small hover-underline d-inline-flex align-items-center gap-1 opacity-75">
+                <span>🔑</span> ¿Olvidaste tu contraseña? Restablecer con QR Maestro
+            </a>
         </div>
     </div>
 </div>

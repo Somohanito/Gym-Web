@@ -1,89 +1,155 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <!-- TARJETA DEL ALUMNO -->
-        <div class="card shadow border-0 text-center mb-4">
-            <div class="card-body">
-                <h3 class="fw-bold">¡Hola, {{ student.nombre }}! 👋</h3>
-                <span class="badge bg-success mb-2">Membresía Al Día</span>
-                <small class="text-muted d-block mb-3">Vence el: {{ student.fecha_vencimiento }}</small>
-                
-                <div class="p-3 bg-light rounded d-inline-block border">
-                    <span class="d-block text-uppercase small text-muted mb-1">Tu Acceso QR</span>
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ student.qr_code }}" alt="QR" class="img-fluid border p-1 rounded">
-                    <span class="badge bg-dark d-block mt-2 font-monospace">{{ student.qr_code }}</span>
-                </div>
-            </div>
-        </div>
+<div class="student-page-bg">
+    <div class="container-fluid px-3 px-md-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-9 col-lg-8 col-xl-7">
 
-        <!-- SECCIÓN DE RUTINAS CON CHECKLIST -->
-        <h4 class="fw-bold mb-3">🏋️‍♂️ Tu Rutina Diaria</h4>
-
-        {% for r in rutinas %}
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center fw-bold">
-                <span>Día: {{ r.dia_semana }}</span>
-                {% if r.completado %}
-                    <span class="badge bg-success">Completado ✅</span>
-                {% endif %}
-            </div>
-            <div class="card-body">
-                <!-- EJERCICIOS -->
-                <h6 class="fw-bold text-primary mb-2">💪 Ejercicios del Día:</h6>
-                <div class="routine-group mb-3" id="routine-group-{{ r.id }}">
-                    {% for ej in r.ejercicios_list %}
-                    <div class="form-check mb-2">
-                        <input class="form-check-input check-task" type="checkbox" id="ej-{{ r.id }}-{{ loop.index }}" data-routine="{{ r.id }}">
-                        <label class="form-check-label" for="ej-{{ r.id }}-{{ loop.index }}">{{ ej }}</label>
+                <!-- TARJETA PRINCIPAL DEL ALUMNO (FROSTED GLASS) -->
+                <div class="student-glass-card p-4 text-center mb-4 animate-fade-up">
+                    <div class="d-inline-flex align-items-center gap-2 bg-dark bg-opacity-60 border border-warning px-3 py-1 rounded-pill mx-auto mb-3 shadow-sm">
+                        <span style="font-size: 1.2rem;">🔥</span>
+                        <span class="fw-bold text-warning small"><span id="header-racha-val">{{ student.racha_dias }}</span> Días de Racha Imparable</span>
                     </div>
-                    {% endfor %}
 
-                    <!-- DIETA / COMIDAS -->
-                    {% if r.comidas_list %}
-                    <h6 class="fw-bold text-success mt-3 mb-2">🥗 Plan de Alimentación:</h6>
-                    {% for com in r.comidas_list %}
-                    <div class="form-check mb-2">
-                        <input class="form-check-input check-task" type="checkbox" id="com-{{ r.id }}-{{ loop.index }}" data-routine="{{ r.id }}">
-                        <label class="form-check-label" for="com-{{ r.id }}-{{ loop.index }}">{{ com }}</label>
-                    </div>
-                    {% endfor %}
+                    <h3 class="fw-bold text-white mb-1">¡Hola, {{ student.nombre }}! 👋</h3>
+                    
+                    {% if student.fecha_vencimiento and student.fecha_vencimiento < hoy %}
+                        <span class="badge bg-danger d-inline-block mx-auto mb-2 px-3 py-1 pulse-badge shadow-sm" style="border-radius: 20px;">
+                            ⚠ Membresía Vencida
+                        </span>
+                    {% else %}
+                        <span class="badge bg-success d-inline-block mx-auto mb-2 px-3 py-1 pulse-badge shadow-sm" style="border-radius: 20px;">
+                            ✅ Membresía Al Día
+                        </span>
                     {% endif %}
+                    
+                    <div class="d-flex justify-content-center gap-4 my-2 text-light opacity-90 small">
+                        <span>🗓️ Vence: <strong>{{ student.fecha_vencimiento }}</strong></span>
+                        <span>🏋️‍♂️ Asistencias Mes: <strong class="text-white">{{ asistencias_mes }}</strong></span>
+                        <span>📊 Días esta semana: <strong class="text-warning">{{ student.dias_entrenados_semana }}</strong></span>
+                    </div>
+                    
+                    <div class="p-3 rounded-4 border border-white border-opacity-25 d-inline-block bg-dark bg-opacity-50 mt-3 shadow-lg">
+                        <span class="d-block text-uppercase small text-light opacity-75 mb-2 fw-bold" style="letter-spacing: 0.05em;">Tu Código QR de Acceso</span>
+                        <div class="bg-white p-2 rounded-3 d-inline-block mb-2 shadow">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ student.qr_code }}" alt="QR Acceso" class="img-fluid d-block">
+                        </div>
+                        <span class="badge bg-secondary bg-opacity-75 d-block font-monospace py-1 text-white border border-secondary">{{ student.qr_code }}</span>
+                    </div>
                 </div>
 
-                <!-- BOTÓN DE COMPLETAR (BLOQUEADO HASTA CUMPLIR EL 100%) -->
-                {% if not r.completado %}
-                <button class="btn btn-secondary w-100 fw-bold btn-complete" id="btn-complete-{{ r.id }}" disabled onclick="finishWorkout('{{ r.id }}')">
-                    🔒 Marca todas las casillas para completar
-                </button>
+                <!-- SECCIÓN DE RUTINA DIARIA -->
+                <h5 class="fw-bold text-white mb-3 text-shadow d-flex align-items-center gap-2">
+                    <span>🏋️‍♂️️</span> Tu Rutina Semanal
+                </h5>
+
+                {% for r in rutinas %}
+                <div class="student-glass-card mb-4 overflow-hidden animate-fade-up delay-1">
+                    <div class="p-3 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-dark bg-opacity-25">
+                        <span class="fw-bold text-white">Día: {{ r.dia_semana }}</span>
+                        {% if r.completado %}
+                            <span class="badge bg-success shadow-sm">Completado ✅</span>
+                        {% else %}
+                            <span class="badge bg-secondary bg-opacity-50 text-light">Pendiente ⏳</span>
+                        {% endif %}
+                    </div>
+                    <div class="p-3">
+                        <h6 class="fw-bold small text-uppercase mb-3" style="color: #a5b4fc;">💪 Ejercicios:</h6>
+                        <div class="routine-group mb-4" id="routine-group-{{ r.id }}">
+                            {% for ej in r.ejercicios_list %}
+                            <div class="form-check d-flex align-items-center gap-2 mb-2 p-2 rounded-3 border border-white border-opacity-10" style="background: rgba(15, 23, 42, 0.45);">
+                                <input class="form-check-input form-check-input-custom check-task ms-0" type="checkbox" id="ej-{{ r.id }}-{{ loop.index }}" data-routine="{{ r.id }}" {% if r.completado %}checked disabled{% endif %}>
+                                <label class="form-check-label text-white small ms-2 {% if r.completado %}text-decoration-line-through opacity-75{% endif %}" for="ej-{{ r.id }}-{{ loop.index }}">{{ ej }}</label>
+                            </div>
+                            {% endfor %}
+
+                            {% if r.comidas_list %}
+                            <h6 class="fw-bold small text-uppercase mt-4 mb-3" style="color: #6ee7b7;">🥗 Alimentación:</h6>
+                            {% for com in r.comidas_list %}
+                            <div class="form-check d-flex align-items-center gap-2 mb-2 p-2 rounded-3 border border-white border-opacity-10" style="background: rgba(15, 23, 42, 0.45);">
+                                <input class="form-check-input form-check-input-custom check-task ms-0" type="checkbox" id="com-{{ r.id }}-{{ loop.index }}" data-routine="{{ r.id }}" {% if r.completado %}checked disabled{% endif %}>
+                                <label class="form-check-label text-white small ms-2 {% if r.completado %}text-decoration-line-through opacity-75{% endif %}" for="com-{{ r.id }}-{{ loop.index }}">{{ com }}</label>
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        {% if not r.completado %}
+                        <button class="btn btn-secondary w-100 fw-bold py-2 border-0 shadow" id="btn-complete-{{ r.id }}" disabled onclick="finishWorkout('{{ r.id }}')">
+                            🔒 Completa todas las casillas para registrar
+                        </button>
+                        {% else %}
+                        <button class="btn btn-outline-success w-100 fw-bold py-2 border-success border-opacity-50 text-white" disabled style="background: rgba(16, 185, 129, 0.25);">
+                            ✅ Entrenamiento Registrado
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
                 {% else %}
-                <button class="btn btn-outline-success w-100 fw-bold" disabled>
-                    ✅ Entrenamiento Registrado
-                </button>
-                {% endif %}
+                <div class="student-glass-card p-4 text-center text-light opacity-75">
+                    Aún no tienes rutinas asignadas por tu coach.
+                </div>
+                {% endfor %}
+
             </div>
         </div>
-        {% else %}
-        <div class="alert alert-info text-center">
-            Aún no tienes rutinas asignadas por tu coach. ¡Pídesela hoy en tu entrenamiento!
-        </div>
-        {% endfor %}
     </div>
 </div>
+
+<!-- MODAL FELICITACIONES DIARIO -->
+<div class="modal fade" id="congratsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered text-center">
+        <div class="modal-content student-glass-card text-white p-4">
+            <div style="font-size: 3.5rem;">🎉</div>
+            <h3 class="fw-bold text-warning mt-2 mb-1">¡Entrenamiento Completado!</h3>
+            <p id="motivational-quote" class="fs-6 text-light my-3 fst-italic px-3 opacity-90"></p>
+            <div class="bg-dark bg-opacity-60 border border-warning p-2 rounded-pill d-inline-block mx-auto mb-3 px-4 shadow">
+                🔥 Racha Acumulada: <span id="new-streak-val" class="fw-bold text-warning"></span> días
+            </div>
+            <button type="button" class="btn btn-indigo w-100 fw-bold mt-2 py-2" onclick="window.location.reload();">¡A seguir con todo!</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL RESUMEN DE NUEVA SEMANA -->
+{% if resumen_semana %}
+<div class="modal fade" id="weeklySummaryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered text-center">
+        <div class="modal-content student-glass-card text-white p-4 border-warning">
+            <div style="font-size: 3.5rem;">🏆</div>
+            <h3 class="fw-bold text-warning mt-2 mb-1">¡Nueva Semana de Entrenamiento!</h3>
+            <p class="fs-6 text-light my-2 opacity-90">{{ resumen_semana.mensaje }}</p>
+            <div class="p-3 bg-dark bg-opacity-50 rounded-3 my-3 border border-white border-opacity-10">
+                <span class="d-block text-muted small">Resumen de la Semana Pasada:</span>
+                <span class="fs-5 fw-bold text-success">Entrenaste {{ resumen_semana.dias_entrenados }} día(s)</span>
+            </div>
+            <button type="button" class="btn btn-indigo w-100 fw-bold py-2" data-bs-dismiss="modal">¡Arrancar esta Semana!</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const checkboxes = document.querySelectorAll('.check-task');
-
+        const checkboxes = document.querySelectorAll('.check-task:not([disabled])');
         checkboxes.forEach(chk => {
             chk.addEventListener('change', (e) => {
                 const routineId = e.target.getAttribute('data-routine');
                 validateChecklist(routineId);
             });
         });
+
+        const weeklyModal = document.getElementById('weeklySummaryModal');
+        if (weeklyModal) {
+            const m = new bootstrap.Modal(weeklyModal);
+            m.show();
+        }
     });
 
     function validateChecklist(routineId) {
@@ -92,20 +158,18 @@
         const btn = document.getElementById(`btn-complete-${routineId}`);
 
         let allChecked = true;
-        allChecks.forEach(c => {
-            if (!c.checked) allChecked = false;
-        });
+        allChecks.forEach(c => { if (!c.checked) allChecked = false; });
 
         if (allChecked && allChecks.length > 0) {
             btn.disabled = false;
             btn.classList.remove('btn-secondary');
-            btn.classList.add('btn-success');
+            btn.classList.add('btn-indigo');
             btn.innerText = "🚀 ¡Completar Entrenamiento!";
         } else {
             btn.disabled = true;
-            btn.classList.remove('btn-success');
+            btn.classList.remove('btn-indigo');
             btn.classList.add('btn-secondary');
-            btn.innerText = "🔒 Marca todas las casillas para completar";
+            btn.innerText = "🔒 Completa todas las casillas para registrar";
         }
     }
 
@@ -114,8 +178,23 @@
         .then(res => res.json())
         .then(data => {
             if(data.success) {
+                document.getElementById('motivational-quote').innerText = data.message;
+                document.getElementById('new-streak-val').innerText = data.racha;
+                document.getElementById('header-racha-val').innerText = data.racha;
+                
+                if (typeof confetti === "function") {
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#6366f1', '#10b981', '#f59e0b', '#ffffff', '#ec4899']
+                    });
+                }
+
+                const modal = new bootstrap.Modal(document.getElementById('congratsModal'));
+                modal.show();
+            } else {
                 alert(data.message);
-                window.location.reload();
             }
         });
     }

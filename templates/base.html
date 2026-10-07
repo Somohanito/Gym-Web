@@ -1,33 +1,88 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="#">🏋️‍♂️ GymWeb</a>
-        {% if session.get('user_id') %}
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                {% if session.get('role') == 'admin' %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Panel Alumnos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin.staff_management') }}">👨‍💼 Personal & QRs Maestros</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin.access_control') }}">📷 Control de Acceso QR</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin.whatsapp_reminders') }}">📲 Recordatorios WhatsApp</a>
-                </li>
-                {% elif session.get('role') == 'coach' %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('coach.dashboard') }}">Dashboard Entrenador</a>
-                </li>
-                {% endif %}
-            </ul>
-            <div class="d-flex align-items-center text-white">
-                <span class="me-3 small fw-bold">{{ session.get('nombre') }} ({{ session.get('role') }})</span>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm">Salir</a>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GymWeb — Plataforma Comercial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<div id="screen-flash-overlay"></div>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-minimal mb-4 sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+                <span style="font-size: 1.3rem;">⚡</span>
+                <span style="letter-spacing: -0.5px;">GymWeb</span>
+            </a>
+            {% if session.get('user_id') %}
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto ms-4 gap-2">
+                    {% if session.get('role') == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('admin.dashboard') }}">Alumnos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('admin.staff_management') }}">Personal & Maestros</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('admin.access_control') }}">Control QR</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('admin.whatsapp_reminders') }}">WhatsApp Alerts</a>
+                    </li>
+                    {% elif session.get('role') == 'coach' %}
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('coach.dashboard') }}">Panel Coach</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="small text-muted fw-medium">{{ session.get('nombre') }} <span class="badge bg-dark border border-secondary ms-1">{{ session.get('role') }}</span></span>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger px-3" style="border-radius: 8px;">Salir</a>
+                </div>
             </div>
+            {% endif %}
         </div>
-        {% endif %}
+    </nav>
+
+    <div class="container pb-5 animate-fade-up">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show card-glass text-white mb-4 border-0 animate-fade-up" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
     </div>
-</nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+    <script>
+    // Corrección definitiva para modales bloqueados en Bootstrap
+    document.addEventListener('show.bs.modal', function (event) {
+        const modal = event.target;
+        // Mueve el modal al final del body para que no quede atrapado en contenedores oscuros
+        document.body.appendChild(modal);
+    });
+
+    document.addEventListener('shown.bs.modal', function (event) {
+        const modal = event.target;
+        // Asegura que el modal sea totalmente clicable y esté al frente de la capa oscura
+        modal.style.zIndex = "1060";
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(b => {
+            b.style.zIndex = "1050";
+        });
+    });
+</script>
+</body>
+</html>

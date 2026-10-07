@@ -1,0 +1,261 @@
+:root {
+    --bg-dark: #080c14;
+    --card-bg: #111827;
+    --card-border: rgba(255, 255, 255, 0.12);
+    --accent-indigo: #6366f1;
+    --accent-indigo-hover: #4f46e5;
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+}
+
+body {
+    background-color: var(--bg-dark) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+}
+
+.text-muted, .small {
+    color: var(--text-secondary) !important;
+}
+
+/* CARDS Y CONTENEDORES */
+.card-glass {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 16px !important;
+}
+
+/* NAVBAR */
+.navbar-minimal {
+    background: #111827 !important;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.nav-link {
+    color: #e2e8f0 !important;
+}
+
+/* TABLAS */
+.table-minimal {
+    color: var(--text-primary) !important;
+    background-color: var(--card-bg) !important;
+    margin-bottom: 0;
+}
+
+.table-minimal th {
+    background-color: #0b0f19 !important;
+    color: #e2e8f0 !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 16px;
+    border-bottom: 1px solid var(--card-border) !important;
+}
+
+.table-minimal td, .table-minimal tr {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    vertical-align: middle;
+}
+
+/* INPUTS */
+.form-control, .form-select {
+    background-color: #1a2333 !important;
+    color: #ffffff !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+    border-color: var(--accent-indigo) !important;
+}
+
+/* FIX DEFINITIVO DE CAPAS PARA MODALES */
+.modal-backdrop {
+    z-index: 1040 !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.modal {
+    z-index: 1050 !important;
+    pointer-events: auto !important;
+}
+
+.modal-dialog {
+    z-index: 1051 !important;
+    pointer-events: auto !important;
+}
+
+.modal-content {
+    background-color: #111827 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 16px !important;
+    pointer-events: auto !important;
+}
+
+/* BOTONES */
+.btn-indigo {
+    background: var(--accent-indigo);
+    color: #ffffff !important;
+    border: none;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 9px 22px;
+}
+
+.btn-indigo:hover {
+    background: var(--accent-indigo-hover);
+}
+
+/* =========================================================
+   DISEÑO LOGIN FROSTED GLASS (OPACO CON DESENFOQUE)
+   ========================================================= */
+
+/* Fondo de pantalla completa con imagen intercambiable */
+.login-page-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    
+    /* IMAGEN DE FONDO (Si agregas tu imagen a static/img/bg-login.jpg la tomará automáticamente) */
+    background: linear-gradient(rgba(8, 12, 20, 0.55), rgba(8, 12, 20, 0.75)), 
+                url('/static/img/logo.jpg'),
+                url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Tarjeta translúcida efecto cristal opaco (Frosted Glass) */
+.login-glass-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 2.5rem 2rem;
+    background: rgba(17, 24, 39, 0.45) !important;
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Inputs flotantes translúcidos estilo moderno */
+.login-glass-card .form-floating > .form-control.glass-input {
+    background-color: rgba(15, 23, 42, 0.5) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+    height: 58px;
+}
+
+.login-glass-card .form-floating > label {
+    color: rgba(226, 232, 240, 0.7) !important;
+    padding-left: 14px;
+}
+
+.login-glass-card .form-floating > .form-control.glass-input:focus {
+    background-color: rgba(15, 23, 42, 0.75) !important;
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4) !important;
+}
+
+.login-glass-card .form-floating > .form-control.glass-input:focus ~ label,
+.login-glass-card .form-floating > .form-control.glass-input:not(:placeholder-shown) ~ label {
+    color: #818cf8 !important;
+    opacity: 0.9;
+}
+
+.hover-underline:hover {
+    text-decoration: underline !important;
+    opacity: 1 !important;
+}
+
+/* =========================================================
+   DISEÑO ESTUDIANTE FROSTED GLASS (MISMO ESTILO DEL LOGIN)
+   ========================================================= */
+
+/* =========================================================
+   DISEÑO ESTUDIANTE (FULLSCREEN + MEJOR USO DE ESPACIOS)
+   ========================================================= */
+
+/* Fondo que cubre absolutamente toda la ventana sin franjas negras */
+.student-page-bg {
+    min-height: calc(100vh - 56px);
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    padding: 30px 15px 60px 15px;
+    
+    /* Imagen a pantalla completa sin cortarse a los lados */
+    background: linear-gradient(rgba(8, 12, 20, 0.65), rgba(8, 12, 20, 0.85)), 
+                url('/static/img/bg-login.jpg'),
+                url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop') center/cover fixed no-repeat !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-attachment: fixed !important;
+}
+
+/* Tarjeta Frosted Glass más amplia para aprovechar el espacio */
+.student-glass-card {
+    background: rgba(17, 24, 39, 0.55) !important;
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(99, 102, 241, 0.15) !important;
+}
+
+.text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* ALERTAS CON TEXTO LEGIBLE Y ALTO CONTRASTE */
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    border: 1px solid rgba(245, 158, 11, 0.5) !important;
+    color: #fef08a !important; /* Amarillo brillante visible */
+}
+
+.alert-danger {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    border: 1px solid rgba(239, 68, 68, 0.5) !important;
+    color: #fca5a5 !important;
+}
+
+.alert-success {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    border: 1px solid rgba(16, 185, 129, 0.5) !important;
+    color: #6ee7b7 !important;
+}
+
+/* FONDO FROSTED GLASS UNIFORME EN TODAS LAS PANTALLAS */
+body {
+    background: linear-gradient(rgba(8, 12, 20, 0.70), rgba(8, 12, 20, 0.85)), 
+                url('/static/img/bg-login.jpg'),
+                url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop') center/cover fixed no-repeat !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    color: #f8fafc;
+}
+
+.card-glass, .login-card, .student-glass-card {
+    background: rgba(17, 24, 39, 0.55) !important;
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
+}

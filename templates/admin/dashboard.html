@@ -1,254 +1,376 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<!-- TARJETAS KPIS -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card bg-primary text-white shadow-sm border-0">
-            <div class="card-body d-flex align-items-center justify-content-between">
+<!-- CARDS DE ESTADÍSTICAS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4 animate-fade-up delay-1">
+        <div class="card card-glass p-3">
+            <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="text-uppercase mb-1">Total Alumnos</h6>
-                    <h2 class="fw-bold mb-0">{{ total_alumnos }}</h2>
+                    <span class="text-muted small text-uppercase fw-semibold">Total Alumnos</span>
+                    <h2 class="fw-bold text-white mb-0 mt-1">{{ total_alumnos }}</h2>
                 </div>
-                <div class="fs-1">👥</div>
+                <div class="p-3 rounded-circle" style="background: rgba(99, 102, 241, 0.1); color: #818cf8;">👥</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white shadow-sm border-0">
-            <div class="card-body d-flex align-items-center justify-content-between">
+    <div class="col-md-4 animate-fade-up delay-2">
+        <div class="card card-glass p-3">
+            <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="text-uppercase mb-1">Generales / Personalizados</h6>
-                    <h2 class="fw-bold mb-0">{{ generales|length }} / {{ personalizados|length }}</h2>
+                    <span class="text-muted small text-uppercase fw-semibold">Generales / Personalizados</span>
+                    <h2 class="fw-bold text-white mb-0 mt-1">{{ generales|length }} / {{ personalizados|length }}</h2>
                 </div>
-                <div class="fs-1">⚡</div>
+                <div class="p-3 rounded-circle" style="background: rgba(16, 185, 129, 0.1); color: #34d399;">⚡</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-danger text-white shadow-sm border-0">
-            <div class="card-body d-flex align-items-center justify-content-between">
+    <div class="col-md-4 animate-fade-up delay-3">
+        <div class="card card-glass p-3">
+            <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="text-uppercase mb-1">Membresías Vencidas</h6>
-                    <h2 class="fw-bold mb-0">{{ vencidos }}</h2>
+                    <span class="text-muted small text-uppercase fw-semibold">Membresías Vencidas</span>
+                    <h2 class="fw-bold text-white mb-0 mt-1">{{ vencidos }}</h2>
                 </div>
-                <div class="fs-1">⚠️</div>
+                <div class="p-3 rounded-circle" style="background: rgba(239, 68, 68, 0.1); color: #f87171;">⚠️</div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold">Gestión Integral de Alumnos</h3>
-    <button class="btn btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#newStudentModal">+ Registrar Alumno</button>
+<!-- SECCIÓN DE GRÁFICA INTERACTIVA E INGRESOS ACUMULADOS -->
+<div class="row g-3 mb-4 animate-fade-up delay-3">
+    <div class="col-md-8">
+        <div class="card card-glass p-3 h-100">
+            <h6 class="fw-bold text-white mb-3">📊 Balance de Estado de Membresías</h6>
+            <div style="height: 180px;">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-glass p-3 h-100 text-center d-flex flex-column justify-content-center align-items-center">
+            <span class="text-muted small text-uppercase fw-semibold">INGRESOS TOTALES ACUMULADOS</span>
+            <h2 class="fw-bold text-success display-6 my-2">${{ "%.2f"|format(ingresos_totales) }}</h2>
+            <span class="badge bg-dark border border-success text-success">💰 Cobro Automatizado</span>
+        </div>
+    </div>
 </div>
 
-<!-- TABS -->
-<ul class="nav nav-pills mb-3" id="studentTabs" role="tablist">
+<div class="d-flex justify-content-between align-items-center mb-3 animate-fade-up delay-4">
+    <h4 class="fw-bold text-white mb-0">Gestión de Alumnos</h4>
+    <button class="btn btn-indigo" data-bs-toggle="modal" data-bs-target="#newStudentModal">+ Registrar Alumno</button>
+</div>
+
+<!-- TABS CON TABLAS SEPARADAS -->
+<ul class="nav nav-pills mb-3 gap-2 animate-fade-up delay-4" id="studentTabs" role="tablist">
     <li class="nav-item">
-        <button class="nav-link active fw-bold me-2" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button">Alumnos Generales ({{ generales|length }})</button>
+        <button class="nav-link active btn-sm px-3 fw-semibold text-white bg-dark border border-secondary" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button">Generales ({{ generales|length }})</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link fw-bold" id="custom-tab" data-bs-toggle="tab" data-bs-target="#custom" type="button">Alumnos Personalizados ({{ personalizados|length }})</button>
+        <button class="nav-link btn-sm px-3 fw-semibold text-white bg-dark border border-secondary" id="custom-tab" data-bs-toggle="tab" data-bs-target="#custom" type="button">Personalizados ({{ personalizados|length }})</button>
     </li>
 </ul>
 
-<div class="tab-content">
+<div class="tab-content animate-fade-up delay-4">
     <!-- TABLA GENERALES -->
     <div class="tab-pane fade show active" id="general">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Teléfono</th>
-                                <th>Código / Ver QR</th>
-                                <th>Vencimiento</th>
-                                <th>Pruebas Admin</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for alumno in generales %}
-                            <tr>
-                                <td class="fw-bold">{{ alumno.nombre }}</td>
-                                <td>{{ alumno.telefono }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-dark fw-bold" data-bs-toggle="modal" data-bs-target="#qrModal{{ alumno.id }}">
-                                        📱 Ver QR
-                                    </button>
-                                </td>
-                                <td>
-                                    {{ alumno.fecha_vencimiento }}
-                                    {% if alumno.fecha_vencimiento < hoy %}
-                                        <span class="badge bg-danger ms-1">Vencido</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <!-- Botones de simulación para Admin -->
-                                    <div class="btn-group btn-group-sm">
-                                        <form action="{{ url_for('admin.simulate_expiration', student_id=alumno.id, mode='near') }}" method="POST" class="d-inline">
-                                            <button type="submit" class="btn btn-outline-warning btn-sm" title="Simular que vence en 2 días">⏳ 2 Días</button>
-                                        </form>
-                                        <form action="{{ url_for('admin.simulate_expiration', student_id=alumno.id, mode='expired') }}" method="POST" class="d-inline">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Simular vencido">🔴 Vencer</button>
-                                        </form>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">Pasar a Personalizado ➡</button>
-                                        </form>
-                                        <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este alumno?');">
-                                            <button type="submit" class="btn btn-sm btn-danger">🗑️ Borrar</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <!-- MODAL DE VISUALIZACIÓN QR -->
-                            <div class="modal fade" id="qrModal{{ alumno.id }}" tabindex="-1">
-                                <div class="modal-dialog modal-dialog-centered text-center">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-dark text-white">
-                                            <h5 class="modal-title">Código QR - {{ alumno.nombre }}</h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body py-4">
-                                            <!-- QR Generado Dinámicamente por API pública -->
-                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ alumno.qr_code }}" alt="QR" class="img-fluid border p-2 rounded shadow-sm">
-                                            <p class="mt-3 font-monospace fw-bold text-muted">{{ alumno.qr_code }}</p>
-                                        </div>
-                                        <div class="modal-footer justify-content-center">
-                                            <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ alumno.qr_code }}" target="_blank" class="btn btn-success fw-bold">Descargar / Imprimir QR</a>
-                                        </div>
-                                    </div>
+        <div class="card card-glass overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-minimal">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Teléfono</th>
+                            <th>QR</th>
+                            <th>Vencimiento</th>
+                            <th>Cobro & Renovación</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alumno in generales %}
+                        <tr>
+                            <td class="fw-bold text-white">{{ alumno.nombre }}</td>
+                            <td class="text-muted">{{ alumno.telefono }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-light py-1 px-2" style="border-radius: 6px; font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#qrModal{{ alumno.id }}">
+                                    📱 Ver QR
+                                </button>
+                            </td>
+                            <td>
+                                <span class="small">{{ alumno.fecha_vencimiento }}</span>
+                                {% if alumno.fecha_vencimiento and alumno.fecha_vencimiento < hoy %}
+                                    <span class="badge bg-danger ms-1 pulse-badge">Vencido</span>
+                                {% else %}
+                                    <span class="badge bg-success ms-1 pulse-badge">Al día</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-success btn-sm fw-bold px-2 py-1" data-bs-toggle="modal" data-bs-target="#renewModal{{ alumno.id }}">
+                                    🔄 Renovar
+                                </button>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ alumno.id }}">✏️ Editar</button>
+                                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">➡ Personalizado</button>
+                                    </form>
+                                    <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Borrar alumno?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑</button>
+                                    </form>
                                 </div>
-                            </div>
-                            {% else %}
-                            <tr><td colspan="6" class="text-center text-muted py-4">No hay alumnos generales.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">Sin alumnos generales registrados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <!-- TABLA PERSONALIZADOS -->
     <div class="tab-pane fade" id="custom">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Usuario</th>
-                                <th>Teléfono</th>
-                                <th>Ver QR</th>
-                                <th>Vencimiento</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for alumno in personalizados %}
-                            <tr>
-                                <td class="fw-bold">{{ alumno.nombre }}</td>
-                                <td><code>{{ alumno.username }}</code></td>
-                                <td>{{ alumno.telefono }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-dark fw-bold" data-bs-toggle="modal" data-bs-target="#qrModalCustom{{ alumno.id }}">
-                                        📱 Ver QR
-                                    </button>
-                                </td>
-                                <td>{{ alumno.fecha_vencimiento }}</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary">⬅ Pasar a General</button>
-                                        </form>
-                                        <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este alumno?');">
-                                            <button type="submit" class="btn btn-sm btn-danger">🗑️ Borrar</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <div class="modal fade" id="qrModalCustom{{ alumno.id }}" tabindex="-1">
-                                <div class="modal-dialog modal-dialog-centered text-center">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-dark text-white">
-                                            <h5 class="modal-title">Código QR - {{ alumno.nombre }}</h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body py-4">
-                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ alumno.qr_code }}" alt="QR" class="img-fluid border p-2 rounded shadow-sm">
-                                            <p class="mt-3 font-monospace fw-bold text-muted">{{ alumno.qr_code }}</p>
-                                        </div>
-                                        <div class="modal-footer justify-content-center">
-                                            <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ alumno.qr_code }}" target="_blank" class="btn btn-success fw-bold">Descargar / Imprimir QR</a>
-                                        </div>
-                                    </div>
+        <div class="card card-glass overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-minimal">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Teléfono</th>
+                            <th>QR</th>
+                            <th>Vencimiento</th>
+                            <th>Cobro & Renovación</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alumno in personalizados %}
+                        <tr>
+                            <td class="fw-bold text-white">{{ alumno.nombre }}</td>
+                            <td><code>{{ alumno.username }}</code></td>
+                            <td class="text-muted">{{ alumno.telefono }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-light py-1 px-2" style="border-radius: 6px; font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#qrModalCustom{{ alumno.id }}">
+                                    📱 Ver QR
+                                </button>
+                            </td>
+                            <td class="small">
+                                {{ alumno.fecha_vencimiento }}
+                                {% if alumno.fecha_vencimiento and alumno.fecha_vencimiento < hoy %}
+                                    <span class="badge bg-danger ms-1 pulse-badge">Vencido</span>
+                                {% else %}
+                                    <span class="badge bg-success ms-1 pulse-badge">Al día</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-success btn-sm fw-bold px-2 py-1" data-bs-toggle="modal" data-bs-target="#renewModal{{ alumno.id }}">
+                                    🔄 Renovar
+                                </button>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ alumno.id }}">✏️ Editar</button>
+                                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">⬅ General</button>
+                                    </form>
+                                    <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Borrar alumno?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                                    </form>
                                 </div>
-                            </div>
-                            {% else %}
-                            <tr><td colspan="6" class="text-center text-muted py-4">No hay alumnos personalizados.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center text-muted py-4">Sin alumnos personalizados registrados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL REGISTRO CON VALIDACIÓN DE TELÉFONO DE 10 DÍGITOS -->
-<div class="modal fade" id="newStudentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="{{ url_for('admin.create_student') }}" method="POST">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title">Registrar Nuevo Alumno</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<!-- =========================================================
+     MODALES UBICADOS FUERA DE LAS TABLAS
+     ========================================================= -->
+
+<!-- MODALES RENOVAR Y EDITAR PARA TODOS LOS ALUMNOS -->
+{% for alumno in generales + personalizados %}
+<!-- MODAL RENOVAR -->
+<div class="modal fade" id="renewModal{{ alumno.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-glass text-white border-success">
+            <form action="{{ url_for('admin.renew_student', student_id=alumno.id) }}" method="POST">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold text-success">Renovar Membresía: {{ alumno.nombre }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <p class="small text-muted mb-3">
+                        Vencimiento actual: <strong>{{ alumno.fecha_vencimiento or 'Sin fecha' }}</strong>. Al renovar, los nuevos días se sumarán automáticamente a su fecha actual o a la fecha de hoy.
+                    </p>
                     <div class="mb-3">
-                        <label class="form-label font-weight-bold">Nombre Completo</label>
-                        <input type="text" name="nombre" class="form-control" required placeholder="Ej: Carlos López">
+                        <label class="form-label text-light small fw-bold">Días a extender</label>
+                        <input type="number" name="dias_membresia" class="form-control bg-dark text-white border-secondary" value="30" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label font-weight-bold">Teléfono WhatsApp (10 dígitos exactos)</label>
-                        <input type="tel" name="telefono" pattern="[0-9]{10}" maxlength="10" minlength="10" class="form-control" required placeholder="Ej: 9611234567" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-                        <small class="text-muted">Solo números. Ejemplo: 9611234567</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label font-weight-bold">Tipo de Alumno</label>
-                        <select name="tipo_alumno" class="form-select">
-                            <option value="general">General (Sin acceso web, solo QR físico)</option>
-                            <option value="custom">Personalizado (Con usuario web + Rutina)</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Días de Membresía</label>
-                            <input type="number" name="dias_membresia" class="form-control" value="30" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Monto ($)</label>
-                            <input type="number" step="0.01" name="monto" class="form-control" value="500.00" required>
-                        </div>
+                        <label class="form-label text-light small fw-bold">Monto de renovación ($)</label>
+                        <input type="number" step="0.01" name="monto" class="form-control bg-dark text-white border-secondary" value="{{ alumno.monto_pago or 500.00 }}" required>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success fw-bold">Guardar Registro</button>
+                <div class="modal-footer border-top border-secondary justify-content-between">
+                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold">Confirmar Cobro y Renovar</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<!-- MODAL EDITAR ALUMNO -->
+<div class="modal fade" id="editModal{{ alumno.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-glass text-white border-info">
+            <form action="{{ url_for('admin.edit_student', student_id=alumno.id) }}" method="POST">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold text-info">Editar Datos: {{ alumno.nombre }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-light small fw-bold">Nombre Completo</label>
+                        <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" value="{{ alumno.nombre }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light small fw-bold">Teléfono (10 dígitos)</label>
+                        <input type="tel" name="telefono" pattern="[0-9]{10}" maxlength="10" minlength="10" class="form-control bg-dark text-white border-secondary" value="{{ alumno.telefono }}" required oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary justify-content-between">
+                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-info text-white fw-bold">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- MODALES QR GENERALES -->
+{% for alumno in generales %}
+<div class="modal fade" id="qrModal{{ alumno.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-center">
+        <div class="modal-content card-glass text-white p-3">
+            <h5 class="fw-bold mb-3">{{ alumno.nombre }}</h5>
+            <div class="bg-white p-3 rounded-3 d-inline-block mx-auto mb-2">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ alumno.qr_code }}" alt="QR" class="img-fluid">
+            </div>
+            <p class="font-monospace text-muted small mb-3">{{ alumno.qr_code }}</p>
+            <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ alumno.qr_code }}" target="_blank" class="btn btn-indigo w-100">Descargar QR</a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- MODALES QR PERSONALIZADOS -->
+{% for alumno in personalizados %}
+<div class="modal fade" id="qrModalCustom{{ alumno.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-center">
+        <div class="modal-content card-glass text-white p-3">
+            <h5 class="fw-bold mb-3">{{ alumno.nombre }}</h5>
+            <div class="bg-white p-3 rounded-3 d-inline-block mx-auto mb-2">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ alumno.qr_code }}" alt="QR" class="img-fluid">
+            </div>
+            <p class="font-monospace text-muted small mb-3">{{ alumno.qr_code }}</p>
+            <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ alumno.qr_code }}" target="_blank" class="btn btn-indigo w-100">Descargar QR</a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- MODAL REGISTRO ALUMNO -->
+<div class="modal fade" id="newStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content card-glass text-white border-secondary">
+            <form action="{{ url_for('admin.create_student') }}" method="POST">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold text-white">Nuevo Alumno</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-light small fw-bold">Nombre Completo</label>
+                        <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" required placeholder="Ej: Carlos López">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light small fw-bold">Teléfono (10 dígitos exactos)</label>
+                        <input type="tel" name="telefono" pattern="[0-9]{10}" maxlength="10" minlength="10" class="form-control bg-dark text-white border-secondary" required placeholder="Ej: 9611234567" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                        <small class="text-muted" style="font-size: 0.75rem;">Solo números. Ejemplo: 9611234567</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light small fw-bold">Tipo de Membresía</label>
+                        <select name="tipo_alumno" class="form-select bg-dark text-white border-secondary">
+                            <option value="general">General (Acceso Físico QR)</option>
+                            <option value="custom">Personalizado (Web + Rutina/Dieta)</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-light small fw-bold">Días Membresía</label>
+                            <input type="number" name="dias_membresia" class="form-control bg-dark text-white border-secondary" value="30" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label text-light small fw-bold">Monto ($)</label>
+                            <input type="number" step="0.01" name="monto" class="form-control bg-dark text-white border-secondary" value="500.00" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary justify-content-between">
+                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-indigo fw-bold">Guardar Alumno</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const totalAlumnos = Number("{{ total_alumnos }}") || 0;
+        const vencidos = Number("{{ vencidos }}") || 0;
+        const activos = totalAlumnos - vencidos;
+
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Alumnos Activos (Al día)', 'Membresías Vencidas'],
+                datasets: [{
+                    label: 'Cantidad',
+                    data: [activos, vencidos],
+                    backgroundColor: ['rgba(16, 185, 129, 0.75)', 'rgba(239, 68, 68, 0.75)'],
+                    borderColor: ['#10b981', '#ef4444'],
+                    borderWidth: 1.5,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#ffffff', font: { weight: 'bold' } } }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}
