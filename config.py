@@ -2,9 +2,9 @@ import os
 
 class Config:
     # 1. IDENTIDAD DEL CLIENTE / GIMNASIO (Fácil de modificar para cada cliente)
-    GYM_NAME = os.environ.get('GYM_NAME', 'GymWeb')
+    GYM_NAME = os.environ.get('GYM_NAME', 'H&L Sport Gym')
     GYM_SLOGAN = os.environ.get('GYM_SLOGAN', 'Tu mejor versión empieza hoy')
-    GYM_LOGO_ICON = os.environ.get('GYM_LOGO_ICON', '⚡')
+    GYM_LOGO_ICON = os.environ.get('GYM_LOGO_ICON', '❚█══█❚')
     
     # 2. CONFIGURACIÓN DE SEGURIDAD Y BASE DE DATOS
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'gymweb_secret_key_987654321'

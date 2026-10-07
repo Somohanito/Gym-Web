@@ -3,7 +3,7 @@
 {% block content %}
 <!-- CARDS DE ESTADÍSTICAS -->
 <div class="row g-3 mb-4">
-    <div class="col-md-4 animate-fade-up delay-1">
+    <div class="col-12 col-md-4 animate-fade-up delay-1">
         <div class="card card-glass p-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -14,7 +14,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 animate-fade-up delay-2">
+    <div class="col-12 col-md-4 animate-fade-up delay-2">
         <div class="card card-glass p-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -25,7 +25,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 animate-fade-up delay-3">
+    <div class="col-12 col-md-4 animate-fade-up delay-3">
         <div class="card card-glass p-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -40,7 +40,7 @@
 
 <!-- SECCIÓN DE GRÁFICA INTERACTIVA E INGRESOS ACUMULADOS -->
 <div class="row g-3 mb-4 animate-fade-up delay-3">
-    <div class="col-md-8">
+    <div class="col-12 col-md-8">
         <div class="card card-glass p-3 h-100">
             <h6 class="fw-bold text-white mb-3">📊 Balance de Estado de Membresías</h6>
             <div style="height: 180px;">
@@ -48,7 +48,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-12 col-md-4">
         <div class="card card-glass p-3 h-100 text-center d-flex flex-column justify-content-center align-items-center">
             <span class="text-muted small text-uppercase fw-semibold">INGRESOS TOTALES ACUMULADOS</span>
             <h2 class="fw-bold text-success display-6 my-2">${{ "%.2f"|format(ingresos_totales) }}</h2>
@@ -57,9 +57,9 @@
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3 animate-fade-up delay-4">
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3 animate-fade-up delay-4">
     <h4 class="fw-bold text-white mb-0">Gestión de Alumnos</h4>
-    <button class="btn btn-indigo" data-bs-toggle="modal" data-bs-target="#newStudentModal">+ Registrar Alumno</button>
+    <button class="btn btn-indigo w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#newStudentModal">+ Registrar Alumno</button>
 </div>
 
 <!-- TABS CON TABLAS SEPARADAS -->
@@ -75,7 +75,8 @@
 <div class="tab-content animate-fade-up delay-4">
     <!-- TABLA GENERALES -->
     <div class="tab-pane fade show active" id="general">
-        <div class="card card-glass overflow-hidden">
+        <!-- VISTA COMPUTADORA -->
+        <div class="card card-glass overflow-hidden desktop-view">
             <div class="table-responsive">
                 <table class="table table-minimal">
                     <thead>
@@ -130,11 +131,42 @@
                 </table>
             </div>
         </div>
+
+        <!-- VISTA TARJETAS MÓVIL (NUEVO: Solo visible en pantallas pequeñas) -->
+        <div class="mobile-view d-md-none">
+            {% for alumno in generales %}
+            <div class="card card-glass p-3 mb-3 border border-secondary border-opacity-25">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-white mb-0">{{ alumno.nombre }}</h6>
+                    {% if alumno.fecha_vencimiento and alumno.fecha_vencimiento < hoy %}
+                        <span class="badge bg-danger">Vencido</span>
+                    {% else %}
+                        <span class="badge bg-success">Al día</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-2">📱 {{ alumno.telefono }} | 🗓️ {{ alumno.fecha_vencimiento }}</p>
+                <div class="d-flex flex-wrap gap-2 pt-2 border-top border-secondary border-opacity-25">
+                    <button class="btn btn-success btn-sm fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#renewModal{{ alumno.id }}">🔄 Renovar</button>
+                    <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#qrModal{{ alumno.id }}">📱 QR</button>
+                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ alumno.id }}">✏️</button>
+                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">➡ Custom</button>
+                    </form>
+                    <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Borrar alumno?');" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="card card-glass text-center text-muted py-4">Sin alumnos generales registrados.</div>
+            {% endfor %}
+        </div>
     </div>
 
     <!-- TABLA PERSONALIZADOS -->
     <div class="tab-pane fade" id="custom">
-        <div class="card card-glass overflow-hidden">
+        <!-- VISTA COMPUTADORA -->
+        <div class="card card-glass overflow-hidden desktop-view">
             <div class="table-responsive">
                 <table class="table table-minimal">
                     <thead>
@@ -191,6 +223,39 @@
                 </table>
             </div>
         </div>
+
+        <!-- VISTA TARJETAS MÓVIL (NUEVO) -->
+        <div class="mobile-view d-md-none">
+            {% for alumno in personalizados %}
+            <div class="card card-glass p-3 mb-3 border border-secondary border-opacity-25">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h6 class="fw-bold text-white mb-0">{{ alumno.nombre }}</h6>
+                        <small class="text-muted"><code>{{ alumno.username }}</code></small>
+                    </div>
+                    {% if alumno.fecha_vencimiento and alumno.fecha_vencimiento < hoy %}
+                        <span class="badge bg-danger">Vencido</span>
+                    {% else %}
+                        <span class="badge bg-success">Al día</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-2">📱 {{ alumno.telefono }} | 🗓️ {{ alumno.fecha_vencimiento }}</p>
+                <div class="d-flex flex-wrap gap-2 pt-2 border-top border-secondary border-opacity-25">
+                    <button class="btn btn-success btn-sm fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#renewModal{{ alumno.id }}">🔄 Renovar</button>
+                    <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#qrModalCustom{{ alumno.id }}">📱 QR</button>
+                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ alumno.id }}">✏️</button>
+                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">⬅ General</button>
+                    </form>
+                    <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Borrar alumno?');" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="card card-glass text-center text-muted py-4">Sin alumnos personalizados registrados.</div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
@@ -198,7 +263,6 @@
      MODALES UBICADOS FUERA DE LAS TABLAS
      ========================================================= -->
 
-<!-- MODALES RENOVAR Y EDITAR PARA TODOS LOS ALUMNOS -->
 {% for alumno in generales + personalizados %}
 <!-- MODAL RENOVAR -->
 <div class="modal fade" id="renewModal{{ alumno.id }}" tabindex="-1" aria-hidden="true">

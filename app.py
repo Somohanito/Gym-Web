@@ -5,6 +5,18 @@ from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
 app.config.from_object(Config)
+from config import Config
+
+# Cargar la configuración en la app Flask
+app.config.from_object(Config)
+
+# Este procesador envía el nombre y logo a TODAS las plantillas HTML
+@app.context_processor
+def inject_gym_info():
+    return {
+        'gym_name': app.config.get('GYM_NAME', 'H&L Sport Gym'),
+        'gym_logo': app.config.get('GYM_LOGO_ICON', '❚█══█❚')
+    }
 
 db.init_app(app)
 bcrypt = Bcrypt(app)

@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GymWeb — Plataforma Comercial</title>
+    <title>{{ gym_name }} — Plataforma Comercial</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-</head>
 <div id="screen-flash-overlay"></div>
+    <!-- NAVBAR CON CONTENEDOR FLUIDO PARA PEGAR EL LOGO A LA IZQUIERDA -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-minimal mb-4 sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
-                <span style="font-size: 1.3rem;">⚡</span>
-                <span style="letter-spacing: -0.5px;">GymWeb</span>
+        <div class="container-fluid px-3">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2 m-0" href="#">
+                <span style="font-size: 1.3rem;">{{ gym_logo }}</span>
+                <span style="letter-spacing: -0.5px;">{{ gym_name }}</span>
             </a>
+
             {% if session.get('user_id') %}
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto ms-4 gap-2">
+            <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse mt-2 mt-lg-0" id="navbarNav">
+                <ul class="navbar-nav me-auto ms-lg-4 gap-2 my-2 my-lg-0">
                     {% if session.get('role') == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link px-3" href="{{ url_for('admin.dashboard') }}">Alumnos</a>
@@ -40,7 +44,7 @@
                     </li>
                     {% endif %}
                 </ul>
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-between justify-content-lg-end gap-3 pt-2 pt-lg-0 border-top border-lg-0 border-secondary border-opacity-25">
                     <span class="small text-muted fw-medium">{{ session.get('nombre') }} <span class="badge bg-dark border border-secondary ms-1">{{ session.get('role') }}</span></span>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger px-3" style="border-radius: 8px;">Salir</a>
                 </div>
@@ -67,22 +71,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}
     <script>
-    // Corrección definitiva para modales bloqueados en Bootstrap
     document.addEventListener('show.bs.modal', function (event) {
         const modal = event.target;
-        // Mueve el modal al final del body para que no quede atrapado en contenedores oscuros
         document.body.appendChild(modal);
     });
 
     document.addEventListener('shown.bs.modal', function (event) {
         const modal = event.target;
-        // Asegura que el modal sea totalmente clicable y esté al frente de la capa oscura
         modal.style.zIndex = "1060";
         const backdrops = document.querySelectorAll('.modal-backdrop');
         backdrops.forEach(b => {
             b.style.zIndex = "1050";
         });
     });
-</script>
+    </script>
 </body>
 </html>
