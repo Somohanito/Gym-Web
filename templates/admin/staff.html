@@ -1,122 +1,134 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4 animate-fade-up">
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 animate-fade-up">
     <div>
-        <h3 class="fw-bold text-white mb-1">👨‍💼 Administración de Personal & QRs Maestros</h3>
-        <p class="text-muted small mb-0">Crea o elimina cuentas para Entrenadores y Recepción, y descarga su QR Maestro de Autorización.</p>
+        <h3 class="fw-bold text-white mb-0">👥 Gestión de Usuarios</h3>
+        <p class="text-muted small">Crea perfiles para Coaches y Administradores.</p>
     </div>
-    <button class="btn btn-indigo" data-bs-toggle="modal" data-bs-target="#newStaffModal">+ Registrar Personal</button>
-</div>
-
-<div class="card card-glass overflow-hidden animate-fade-up delay-1">
-    <div class="table-responsive">
-        <table class="table table-minimal">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Usuario</th>
-                    <th>Rol</th>
-                    <th>Teléfono</th>
-                    <th>QR Maestro</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for member in staff %}
-                <tr>
-                    <td class="fw-bold text-white">{{ member.nombre }}</td>
-                    <td><code>{{ member.username }}</code></td>
-                    <td>
-                        <span class="badge {% if member.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %} px-2 py-1">
-                            {{ member.role | upper }}
-                        </span>
-                    </td>
-                    <td class="text-muted">{{ member.telefono }}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-warning text-warning border-warning fw-bold py-1 px-2" style="border-radius: 6px; font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#qrMasterModal{{ member.id }}">
-                            🔑 Ver QR Maestro
-                        </button>
-                    </td>
-                    <td>
-                        {% if member.id != session.get('user_id') %}
-                        <form action="{{ url_for('admin.delete_staff', staff_id=member.id) }}" method="POST" onsubmit="return confirm('¿Seguro de eliminar este miembro del personal?');">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Eliminar</button>
-                        </form>
-                        {% else %}
-                        <span class="badge bg-secondary">Tu Cuenta</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr><td colspan="6" class="text-center text-muted py-4">No hay personal registrado.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-warning border-warning text-warning fw-bold px-3 py-2" style="border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#coachMasterQr">
+            🔑 QR Maestro
+        </button>
+        <button class="btn btn-indigo text-nowrap fw-bold" data-bs-toggle="modal" data-bs-target="#newStaffModal">+ Registrar Personal</button>
     </div>
 </div>
 
-<!-- MODALES COLOCADOS FUERA DE LA TABLA -->
-{% for member in staff %}
-<div class="modal fade" id="qrMasterModal{{ member.id }}" tabindex="-1" aria-hidden="true">
+<div class="card card-glass p-3 border-0 table-responsive animate-fade-up delay-1">
+    <table class="table table-minimal w-100">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Rol</th>
+                <th>Usuario</th>
+                <th>Teléfono</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in staff %}
+            <tr>
+                <td class="fw-bold text-white">{{ s.nombre }}</td>
+                <td><span class="badge {% if s.role == 'admin' %}bg-danger{% else %}bg-indigo{% endif %}">{{ s.role|upper }}</span></td>
+                <td><code>{{ s.username }}</code></td>
+                <td class="text-muted">{{ s.telefono_desencriptado or s.telefono }}</td>
+                <td>
+                    {% if s.id != session.get('user_id') %}
+                    <!-- BOTÓN QUE ACTIVA EL MODAL DE BORRADO -->
+                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteStaffModal{{ s.id }}">🗑️ Borrar</button>
+                    {% else %}
+                    <span class="badge bg-secondary">Tú</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No hay personal registrado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- MODALES DE CONFIRMACIÓN PARA EL PERSONAL -->
+{% for s in staff %}
+{% if s.id != session.get('user_id') %}
+<div class="modal fade" id="deleteStaffModal{{ s.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered text-center">
-        <div class="modal-content card-glass text-white p-3">
-            <div class="modal-header border-bottom border-secondary">
-                <h5 class="modal-title fw-bold text-warning">QR Maestro - {{ member.nombre }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body py-4">
-                <p class="text-muted small mb-3">Muestra este código a los alumnos para autorizar el restablecimiento de su contraseña presencialmente.</p>
-                <div class="bg-white p-3 rounded-3 d-inline-block shadow-sm">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ member.qr_code }}" alt="QR Maestro" class="img-fluid d-block mx-auto">
-                </div>
-                <p class="mt-3 font-monospace fw-bold text-warning mb-0" style="font-size: 0.9rem;">{{ member.qr_code }}</p>
-            </div>
-            <div class="modal-footer border-top border-secondary justify-content-center">
-                <a href="https://api.qrserver.com/v1/create-qr-code/?size=350x350&data={{ member.qr_code }}" target="_blank" class="btn btn-indigo fw-bold w-100">Imprimir QR Maestro</a>
+        <div class="modal-content card-glass text-white p-4 border-danger shadow-lg">
+            <div style="font-size: 3rem;">⚠️</div>
+            <h4 class="fw-bold text-danger mt-2 mb-1">¿Estás seguro?</h4>
+            <p class="fs-6 text-light my-2">¿Seguro que quieres eliminar al usuario <strong>{{ s.nombre }}</strong>?</p>
+            <div class="d-flex gap-2 mt-3">
+                <button type="button" class="btn btn-outline-light w-50 fw-bold py-2" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('admin.delete_staff', staff_id=s.id) }}" method="POST" class="w-50">
+                    <button type="submit" class="btn btn-danger w-100 fw-bold py-2">Sí, eliminar</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
 {% endfor %}
 
-<!-- MODAL REGISTRO DE PERSONAL -->
+<!-- MODAL QR MAESTRO -->
+<div class="modal fade" id="coachMasterQr" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-center">
+        <div class="modal-content card-glass text-white p-3 border-warning">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title fw-bold text-warning">QR Maestro de Autorización</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="text-muted small mb-3">Muestra este código para autorizar el restablecimiento de contraseñas de los alumnos.</p>
+                <div class="bg-white p-3 rounded-3 d-inline-block shadow-sm">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ current_user.qr_code }}" alt="QR Maestro" class="img-fluid d-block mx-auto">
+                </div>
+                <p class="font-monospace text-warning fw-bold mt-3 mb-0" style="font-size: 0.9rem;">{{ current_user.qr_code }}</p>
+            </div>
+            <div class="modal-footer border-top border-secondary justify-content-center">
+                <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL REGISTRO PERSONAL -->
 <div class="modal fade" id="newStaffModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content card-glass text-white border-secondary">
-            <form action="{{ url_for('admin.create_staff') }}" method="POST">
+            <form action="{{ url_for('admin.staff') }}" method="POST">
                 <div class="modal-header border-bottom border-secondary">
-                    <h5 class="modal-title fw-bold text-white">Registrar Nuevo Usuario de Personal</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold">Nuevo Personal</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Nombre Completo</label>
-                        <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" required placeholder="Ej: Entrenador Roberto">
+                        <label class="form-label small fw-bold">Nombre Completo</label>
+                        <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label small fw-bold">Usuario (Login)</label>
+                            <input type="text" name="username" class="form-control bg-dark text-white border-secondary" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label small fw-bold">Contraseña</label>
+                            <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required>
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Teléfono (10 dígitos)</label>
-                        <input type="tel" name="telefono" pattern="[0-9]{10}" maxlength="10" minlength="10" class="form-control bg-dark text-white border-secondary" required placeholder="Ej: 9611234567" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                        <label class="form-label small fw-bold">Teléfono (10 dígitos exactos)</label>
+                        <input type="tel" name="telefono" pattern="\d{10}" maxlength="10" minlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="form-control bg-dark text-white border-secondary" required placeholder="Ej: 9611234567">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Rol en el Gimnasio</label>
+                        <label class="form-label small fw-bold">Rol</label>
                         <select name="role" class="form-select bg-dark text-white border-secondary">
-                            <option value="coach">Entrenador / Coach</option>
-                            <option value="admin">Administración / Recepción</option>
+                            <option value="coach">Entrenador (Coach)</option>
+                            <option value="admin">Administrador (Control Total)</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Nombre de Usuario</label>
-                        <input type="text" name="username" class="form-control bg-dark text-white border-secondary" required placeholder="Ej: coach_roberto">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Contraseña</label>
-                        <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required placeholder="Escribe la contraseña de acceso">
-                    </div>
                 </div>
-                <div class="modal-footer border-top border-secondary justify-content-between">
-                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-indigo fw-bold">Crear Usuario</button>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="submit" class="btn btn-indigo fw-bold w-100">Guardar Perfil</button>
                 </div>
             </form>
         </div>

@@ -1,401 +1,372 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<!-- CARDS DE ESTADÍSTICAS -->
-<div class="row g-3 mb-4">
-    <div class="col-12 col-md-4 animate-fade-up delay-1">
-        <div class="card card-glass p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted small text-uppercase fw-semibold">Total Alumnos</span>
-                    <h2 class="fw-bold text-white mb-0 mt-1">{{ total_alumnos }}</h2>
-                </div>
-                <div class="p-3 rounded-circle" style="background: rgba(99, 102, 241, 0.1); color: #818cf8;">👥</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 animate-fade-up delay-2">
-        <div class="card card-glass p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted small text-uppercase fw-semibold">Generales / Personalizados</span>
-                    <h2 class="fw-bold text-white mb-0 mt-1">{{ generales|length }} / {{ personalizados|length }}</h2>
-                </div>
-                <div class="p-3 rounded-circle" style="background: rgba(16, 185, 129, 0.1); color: #34d399;">⚡</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 animate-fade-up delay-3">
-        <div class="card card-glass p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted small text-uppercase fw-semibold">Membresías Vencidas</span>
-                    <h2 class="fw-bold text-white mb-0 mt-1">{{ vencidos }}</h2>
-                </div>
-                <div class="p-3 rounded-circle" style="background: rgba(239, 68, 68, 0.1); color: #f87171;">⚠️</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- SECCIÓN DE GRÁFICA INTERACTIVA E INGRESOS ACUMULADOS -->
-<div class="row g-3 mb-4 animate-fade-up delay-3">
-    <div class="col-12 col-md-8">
-        <div class="card card-glass p-3 h-100">
-            <h6 class="fw-bold text-white mb-3">📊 Balance de Estado de Membresías</h6>
-            <div style="height: 180px;">
-                <canvas id="analyticsChart"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4">
-        <div class="card card-glass p-3 h-100 text-center d-flex flex-column justify-content-center align-items-center">
-            <span class="text-muted small text-uppercase fw-semibold">INGRESOS TOTALES ACUMULADOS</span>
-            <h2 class="fw-bold text-success display-6 my-2">${{ "%.2f"|format(ingresos_totales) }}</h2>
-            <span class="badge bg-dark border border-success text-success">💰 Cobro Automatizado</span>
-        </div>
-    </div>
-</div>
-
-<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3 animate-fade-up delay-4">
-    <h4 class="fw-bold text-white mb-0">Gestión de Alumnos</h4>
-    <button class="btn btn-indigo w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#newStudentModal">+ Registrar Alumno</button>
-</div>
-
-<!-- TABS CON TABLAS SEPARADAS -->
-<ul class="nav nav-pills mb-3 gap-2 animate-fade-up delay-4" id="studentTabs" role="tablist">
+<!-- MÓDULOS PRINCIPALES (NAVEGACIÓN) -->
+<ul class="nav nav-pills nav-fill mb-4 gap-2 animate-fade-up" id="dashboardModules" role="tablist">
     <li class="nav-item">
-        <button class="nav-link active btn-sm px-3 fw-semibold text-white bg-dark border border-secondary" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button">Generales ({{ generales|length }})</button>
+        <button class="nav-link active fw-bold border border-secondary shadow-sm" data-bs-toggle="pill" data-bs-target="#inscritos" type="button">👥 Inscritos ({{ total_alumnos }})</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link btn-sm px-3 fw-semibold text-white bg-dark border border-secondary" id="custom-tab" data-bs-toggle="tab" data-bs-target="#custom" type="button">Personalizados ({{ personalizados|length }})</button>
+        <button class="nav-link fw-bold border border-secondary shadow-sm text-danger" data-bs-toggle="pill" data-bs-target="#vencidos" type="button">⚠️ Vencidos ({{ vencidos }})</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link fw-bold border border-secondary shadow-sm text-success" data-bs-toggle="pill" data-bs-target="#ingresos" type="button">💰 Ingresos</button>
     </li>
 </ul>
 
-<div class="tab-content animate-fade-up delay-4">
-    <!-- TABLA GENERALES -->
-    <div class="tab-pane fade show active" id="general">
-        <!-- VISTA COMPUTADORA -->
-        <div class="card card-glass overflow-hidden desktop-view">
-            <div class="table-responsive">
-                <table class="table table-minimal">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Teléfono</th>
-                            <th>QR</th>
-                            <th>Vencimiento</th>
-                            <th>Cobro & Renovación</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for alumno in generales %}
-                        <tr>
-                            <td class="fw-bold text-white">{{ alumno.nombre }}</td>
-                            <td class="text-muted">{{ alumno.telefono }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-light py-1 px-2" style="border-radius: 6px; font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#qrModal{{ alumno.id }}">
-                                    📱 Ver QR
-                                </button>
-                            </td>
-                            <td>
-                                <span class="small">{{ alumno.fecha_vencimiento }}</span>
-                                {% if alumno.fecha_vencimiento and alumno.fecha_vencimiento < hoy %}
-                                    <span class="badge bg-danger ms-1 pulse-badge">Vencido</span>
-                                {% else %}
-                                    <span class="badge bg-success ms-1 pulse-badge">Al día</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button class="btn btn-success btn-sm fw-bold px-2 py-1" data-bs-toggle="modal" data-bs-target="#renewModal{{ alumno.id }}">
-                                    🔄 Renovar
-                                </button>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ alumno.id }}">✏️ Editar</button>
-                                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">➡ Personalizado</button>
-                                    </form>
-                                    <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Borrar alumno?');">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="6" class="text-center text-muted py-4">Sin alumnos generales registrados.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<div class="tab-content animate-fade-up delay-1">
+    
+    <!-- ================= MODULO 1: INSCRITOS ================= -->
+    <div class="tab-pane fade show active" id="inscritos">
+        <div class="card card-glass p-3 mb-4 border-0">
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
+                <input type="text" id="buscadorInscritos" class="form-control bg-dark text-white border-secondary w-100" placeholder="🔍 Buscar alumno por nombre o teléfono...">
+                <button class="btn btn-indigo text-nowrap fw-bold" data-bs-toggle="modal" data-bs-target="#newStudentModal">+ Registrar Alumno</button>
             </div>
-        </div>
+            
+            <ul class="nav nav-pills nav-fill border border-secondary rounded p-1 bg-black mb-3" id="subTabsInscritos" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active fw-bold text-white" data-bs-toggle="tab" data-bs-target="#tabla-general" type="button">Membresía General</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold text-light" data-bs-toggle="tab" data-bs-target="#tabla-custom" type="button">Membresía Personalizada</button>
+                </li>
+            </ul>
 
-        <!-- VISTA TARJETAS MÓVIL (NUEVO: Solo visible en pantallas pequeñas) -->
-        <div class="mobile-view d-md-none">
-            {% for alumno in generales %}
-            <div class="card card-glass p-3 mb-3 border border-secondary border-opacity-25">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="fw-bold text-white mb-0">{{ alumno.nombre }}</h6>
-                    {% if alumno.fecha_vencimiento and alumno.fecha_vencimiento < hoy %}
-                        <span class="badge bg-danger">Vencido</span>
-                    {% else %}
-                        <span class="badge bg-success">Al día</span>
-                    {% endif %}
+            <div class="tab-content">
+                <!-- TABLA GENERAL -->
+                <div class="tab-pane fade show active table-responsive" id="tabla-general">
+                    <table class="table table-minimal w-100" id="tableGeneral">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Teléfono</th>
+                                <th>Vencimiento</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in generales %}
+                            <tr class="search-row-inscritos">
+                                <td class="fw-bold text-white">{{ a.nombre }}</td>
+                                <td class="text-muted">{{ a.telefono_desencriptado or a.telefono }}</td>
+                                <td>
+                                    <span class="small">{{ a.fecha_vencimiento }}</span>
+                                    {% if a.fecha_vencimiento and a.fecha_vencimiento < hoy %}<span class="badge bg-danger ms-1">Vencido</span>{% else %}<span class="badge bg-success ms-1">Al día</span>{% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#qrModal{{ a.id }}">📱 QR</button>
+                                        <button class="btn btn-success btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#renewModal{{ a.id }}">🔄</button>
+                                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ a.id }}">✏️</button>
+                                        <!-- BOTÓN ELIMINAR -->
+                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ a.id }}">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <p class="text-muted small mb-2">📱 {{ alumno.telefono }} | 🗓️ {{ alumno.fecha_vencimiento }}</p>
-                <div class="d-flex flex-wrap gap-2 pt-2 border-top border-secondary border-opacity-25">
-                    <button class="btn btn-success btn-sm fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#renewModal{{ alumno.id }}">🔄 Renovar</button>
-                    <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#qrModal{{ alumno.id }}">📱 QR</button>
-                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ alumno.id }}">✏️</button>
-                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-outline-primary">➡ Custom</button>
-                    </form>
-                    <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Borrar alumno?');" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑</button>
-                    </form>
+                
+                <!-- TABLA PERSONALIZADA -->
+                <div class="tab-pane fade table-responsive" id="tabla-custom">
+                    <table class="table table-minimal w-100" id="tableCustom">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Coach</th>
+                                <th>Teléfono</th>
+                                <th>Vencimiento</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in personalizados %}
+                            <tr class="search-row-inscritos">
+                                <td class="fw-bold text-white">{{ a.nombre }}</td>
+                                <td><span class="badge bg-indigo">{{ a.coach.nombre if a.coach else 'Sin Coach' }}</span></td>
+                                <td class="text-muted">{{ a.telefono_desencriptado or a.telefono }}</td>
+                                <td>
+                                    <span class="small">{{ a.fecha_vencimiento }}</span>
+                                    {% if a.fecha_vencimiento and a.fecha_vencimiento < hoy %}<span class="badge bg-danger ms-1">Vencido</span>{% else %}<span class="badge bg-success ms-1">Al día</span>{% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#qrModal{{ a.id }}">📱 QR</button>
+                                        <button class="btn btn-success btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#renewModal{{ a.id }}">🔄</button>
+                                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ a.id }}">✏️</button>
+                                        <!-- BOTÓN ELIMINAR -->
+                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ a.id }}">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            {% else %}
-            <div class="card card-glass text-center text-muted py-4">Sin alumnos generales registrados.</div>
-            {% endfor %}
         </div>
     </div>
 
-    <!-- TABLA PERSONALIZADOS -->
-    <div class="tab-pane fade" id="custom">
-        <!-- VISTA COMPUTADORA -->
-        <div class="card card-glass overflow-hidden desktop-view">
+    <!-- ================= MODULO 2: VENCIDOS ================= -->
+    <div class="tab-pane fade" id="vencidos">
+        <div class="card card-glass p-3 mb-4 border-0">
+            <h5 class="fw-bold text-danger mb-3">⚠️ Alumnos con Membresía Vencida</h5>
+            <input type="text" id="buscadorVencidos" class="form-control bg-dark text-white border-secondary mb-3 w-100" placeholder="🔍 Buscar entre los vencidos...">
+            
             <div class="table-responsive">
-                <table class="table table-minimal">
+                <table class="table table-minimal w-100" id="tableVencidos">
                     <thead>
                         <tr>
-                            <th>Nombre</th>
-                            <th>Usuario</th>
+                            <th>Alumno</th>
                             <th>Teléfono</th>
-                            <th>QR</th>
-                            <th>Vencimiento</th>
-                            <th>Cobro & Renovación</th>
+                            <th>Venció el</th>
                             <th>Acción</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for alumno in personalizados %}
-                        <tr>
-                            <td class="fw-bold text-white">{{ alumno.nombre }}</td>
-                            <td><code>{{ alumno.username }}</code></td>
-                            <td class="text-muted">{{ alumno.telefono }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-light py-1 px-2" style="border-radius: 6px; font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#qrModalCustom{{ alumno.id }}">
-                                    📱 Ver QR
-                                </button>
-                            </td>
-                            <td class="small">
-                                {{ alumno.fecha_vencimiento }}
-                                {% if alumno.fecha_vencimiento and alumno.fecha_vencimiento < hoy %}
-                                    <span class="badge bg-danger ms-1 pulse-badge">Vencido</span>
-                                {% else %}
-                                    <span class="badge bg-success ms-1 pulse-badge">Al día</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button class="btn btn-success btn-sm fw-bold px-2 py-1" data-bs-toggle="modal" data-bs-target="#renewModal{{ alumno.id }}">
-                                    🔄 Renovar
-                                </button>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ alumno.id }}">✏️ Editar</button>
-                                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST">
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">⬅ General</button>
-                                    </form>
-                                    <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Borrar alumno?');">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="7" class="text-center text-muted py-4">Sin alumnos personalizados registrados.</td></tr>
+                        {% for a in generales + personalizados %}
+                            {% if a.fecha_vencimiento and a.fecha_vencimiento < hoy %}
+                            <tr class="search-row-vencidos">
+                                <td class="fw-bold text-white">{{ a.nombre }}</td>
+                                <td class="text-muted">{{ a.telefono_desencriptado or a.telefono }}</td>
+                                <td class="text-danger fw-bold">{{ a.fecha_vencimiento }}</td>
+                                <td>
+                                    {% set msj = "Hola " ~ a.nombre ~ "! Te recordamos que tu membresía en " ~ gym_name ~ " venció el " ~ a.fecha_vencimiento ~ ". ¡Te esperamos para renovar y seguir entrenando!" %}
+                                    <div class="d-flex gap-2">
+                                        <a href="https://api.whatsapp.com/send?phone=52{{ a.telefono_desencriptado or a.telefono }}&text={{ msj | urlencode }}" target="_blank" class="btn btn-sm btn-success fw-bold">
+                                            💬 WhatsApp
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ a.id }}">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
+    </div>
 
-        <!-- VISTA TARJETAS MÓVIL (NUEVO) -->
-        <div class="mobile-view d-md-none">
-            {% for alumno in personalizados %}
-            <div class="card card-glass p-3 mb-3 border border-secondary border-opacity-25">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div>
-                        <h6 class="fw-bold text-white mb-0">{{ alumno.nombre }}</h6>
-                        <small class="text-muted"><code>{{ alumno.username }}</code></small>
-                    </div>
-                    {% if alumno.fecha_vencimiento and alumno.fecha_vencimiento < hoy %}
-                        <span class="badge bg-danger">Vencido</span>
-                    {% else %}
-                        <span class="badge bg-success">Al día</span>
-                    {% endif %}
-                </div>
-                <p class="text-muted small mb-2">📱 {{ alumno.telefono }} | 🗓️ {{ alumno.fecha_vencimiento }}</p>
-                <div class="d-flex flex-wrap gap-2 pt-2 border-top border-secondary border-opacity-25">
-                    <button class="btn btn-success btn-sm fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#renewModal{{ alumno.id }}">🔄 Renovar</button>
-                    <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#qrModalCustom{{ alumno.id }}">📱 QR</button>
-                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editModal{{ alumno.id }}">✏️</button>
-                    <form action="{{ url_for('admin.toggle_student_type', student_id=alumno.id) }}" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">⬅ General</button>
-                    </form>
-                    <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" onsubmit="return confirm('¿Borrar alumno?');" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
-                    </form>
+    <!-- ================= MODULO 3: INGRESOS ================= -->
+    <div class="tab-pane fade" id="ingresos">
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+                <div class="card bg-success bg-opacity-25 border border-success p-3 text-center rounded-3">
+                    <span class="small text-success fw-bold text-uppercase">Total Histórico</span>
+                    <h3 class="fw-bold text-white mt-2">${{ "%.2f"|format(ingresos_totales) }}</h3>
                 </div>
             </div>
-            {% else %}
-            <div class="card card-glass text-center text-muted py-4">Sin alumnos personalizados registrados.</div>
-            {% endfor %}
+            <div class="col-6 col-md-4">
+                <div class="card bg-dark border border-secondary p-3 text-center rounded-3">
+                    <span class="small text-muted fw-bold text-uppercase">Efectivo 💵</span>
+                    <h4 class="fw-bold text-white mt-2">${{ "%.2f"|format(ingresos_efectivo) }}</h4>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card bg-dark border border-secondary p-3 text-center rounded-3">
+                    <span class="small text-muted fw-bold text-uppercase">Transferencia 💳</span>
+                    <h4 class="fw-bold text-white mt-2">${{ "%.2f"|format(ingresos_transferencia) }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="card card-glass p-4 text-center border-0">
+            <h5 class="fw-bold text-white">Exportación Contable</h5>
+            <p class="text-muted small">Descarga el reporte completo de todos los alumnos activos, vencidos e ingresos históricos.</p>
+            <a href="{{ url_for('admin.export_excel') }}" class="btn btn-success fw-bold py-2 w-100">📊 Descargar Reporte en Excel</a>
         </div>
     </div>
 </div>
 
-<!-- =========================================================
-     MODALES UBICADOS FUERA DE LAS TABLAS
-     ========================================================= -->
-
+<!-- ================= MODALES INDIVIDUALES PARA ALUMNOS ================= -->
 {% for alumno in generales + personalizados %}
+
+<!-- MODAL QR INDIVIDUAL -->
+<div class="modal fade" id="qrModal{{ alumno.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-glass border-secondary">
+            <div class="modal-header border-bottom border-secondary bg-dark">
+                <h5 class="modal-title fw-bold text-white">📱 Código QR de Acceso</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center bg-white p-4">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ alumno.qr_code }}" alt="QR" class="img-fluid rounded shadow">
+                <h4 class="text-dark fw-bold mt-3 mb-0">{{ alumno.qr_code }}</h4>
+                <p class="text-muted small mt-1">{{ alumno.nombre }}</p>
+            </div>
+            <div class="modal-footer border-top border-secondary bg-dark">
+                <button type="button" class="btn btn-danger w-100 fw-bold py-2" data-bs-dismiss="modal">❌ Cerrar Pantalla</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL RENOVAR -->
 <div class="modal fade" id="renewModal{{ alumno.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content card-glass text-white border-success">
             <form action="{{ url_for('admin.renew_student', student_id=alumno.id) }}" method="POST">
                 <div class="modal-header border-bottom border-secondary">
-                    <h5 class="modal-title fw-bold text-success">Renovar Membresía: {{ alumno.nombre }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold text-success">Renovar: {{ alumno.nombre }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="small text-muted mb-3">
-                        Vencimiento actual: <strong>{{ alumno.fecha_vencimiento or 'Sin fecha' }}</strong>. Al renovar, los nuevos días se sumarán automáticamente a su fecha actual o a la fecha de hoy.
-                    </p>
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Días a extender</label>
+                        <label class="form-label small fw-bold">Días</label>
                         <input type="number" name="dias_membresia" class="form-control bg-dark text-white border-secondary" value="30" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Monto de renovación ($)</label>
-                        <input type="number" step="0.01" name="monto" class="form-control bg-dark text-white border-secondary" value="{{ alumno.monto_pago or 500.00 }}" required>
+                        <label class="form-label small fw-bold">Monto ($)</label>
+                        <input type="number" step="0.01" name="monto" class="form-control bg-dark text-white border-secondary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Método</label>
+                        <select name="metodo_pago" class="form-select bg-dark text-white border-secondary">
+                            <option value="Efectivo">Efectivo 💵</option>
+                            <option value="Transferencia">Transferencia 💳</option>
+                        </select>
                     </div>
                 </div>
-                <div class="modal-footer border-top border-secondary justify-content-between">
-                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success fw-bold">Confirmar Cobro y Renovar</button>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="submit" class="btn btn-success fw-bold w-100">Confirmar Cobro</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- MODAL EDITAR ALUMNO -->
+<!-- MODAL EDITAR -->
 <div class="modal fade" id="editModal{{ alumno.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content card-glass text-white border-info">
             <form action="{{ url_for('admin.edit_student', student_id=alumno.id) }}" method="POST">
                 <div class="modal-header border-bottom border-secondary">
-                    <h5 class="modal-title fw-bold text-info">Editar Datos: {{ alumno.nombre }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold text-info">Editar: {{ alumno.nombre }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Nombre Completo</label>
+                        <label class="form-label small fw-bold">Nombre</label>
                         <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" value="{{ alumno.nombre }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Teléfono (10 dígitos)</label>
-                        <input type="tel" name="telefono" pattern="[0-9]{10}" maxlength="10" minlength="10" class="form-control bg-dark text-white border-secondary" value="{{ alumno.telefono }}" required oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                        <label class="form-label small fw-bold">Teléfono (10 dígitos exactos)</label>
+                        <input type="tel" name="telefono" pattern="\d{10}" maxlength="10" minlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="form-control bg-dark text-white border-secondary" value="{{ alumno.telefono_desencriptado or alumno.telefono }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Tipo de Membresía Actual</label>
+                        <select name="tipo_alumno" id="editTipoAlumno{{ alumno.id }}" class="form-select bg-dark text-white border-secondary" onchange="toggleEditCoach{{ alumno.id }}(this.value)">
+                            <option value="general" {% if not alumno.is_custom_student %}selected{% endif %}>General</option>
+                            <option value="custom" {% if alumno.is_custom_student %}selected{% endif %}>Personalizada (Con Coach)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 {% if not alumno.is_custom_student %}d-none{% endif %}" id="editCoachGroup{{ alumno.id }}">
+                        <label class="form-label small fw-bold">Asignar / Cambiar Coach</label>
+                        <select name="coach_id" class="form-select bg-dark text-white border-secondary">
+                            <option value="">Selecciona un Coach</option>
+                            {% for c in coaches %}
+                            <option value="{{ c.id }}" {% if alumno.coach_id == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
-                <div class="modal-footer border-top border-secondary justify-content-between">
-                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-info text-white fw-bold">Guardar Cambios</button>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="submit" class="btn btn-info text-white fw-bold w-100">Guardar Cambios</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-{% endfor %}
 
-<!-- MODALES QR GENERALES -->
-{% for alumno in generales %}
-<div class="modal fade" id="qrModal{{ alumno.id }}" tabindex="-1" aria-hidden="true">
+<!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN (TIPO ALERTA LIMPIA) -->
+<div class="modal fade" id="deleteModal{{ alumno.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered text-center">
-        <div class="modal-content card-glass text-white p-3">
-            <h5 class="fw-bold mb-3">{{ alumno.nombre }}</h5>
-            <div class="bg-white p-3 rounded-3 d-inline-block mx-auto mb-2">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ alumno.qr_code }}" alt="QR" class="img-fluid">
+        <div class="modal-content card-glass text-white p-4 border-danger shadow-lg">
+            <div style="font-size: 3rem;">⚠️</div>
+            <h4 class="fw-bold text-danger mt-2 mb-1">¿Estás seguro?</h4>
+            <p class="fs-6 text-light my-2">¿Seguro que quieres eliminar a <strong>{{ alumno.nombre }}</strong>?</p>
+            <div class="d-flex gap-2 mt-3">
+                <button type="button" class="btn btn-outline-light w-50 fw-bold py-2" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('admin.delete_student', student_id=alumno.id) }}" method="POST" class="w-50">
+                    <button type="submit" class="btn btn-danger w-100 fw-bold py-2">Sí, eliminar</button>
+                </form>
             </div>
-            <p class="font-monospace text-muted small mb-3">{{ alumno.qr_code }}</p>
-            <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ alumno.qr_code }}" target="_blank" class="btn btn-indigo w-100">Descargar QR</a>
         </div>
     </div>
 </div>
+
+<script>
+    function toggleEditCoach{{ alumno.id }}(val) {
+        const group = document.getElementById('editCoachGroup{{ alumno.id }}');
+        const select = group.querySelector('select');
+        if (val === 'custom') {
+            group.classList.remove('d-none');
+            select.required = true;
+        } else {
+            group.classList.add('d-none');
+            select.required = false;
+            select.value = "";
+        }
+    }
+</script>
 {% endfor %}
 
-<!-- MODALES QR PERSONALIZADOS -->
-{% for alumno in personalizados %}
-<div class="modal fade" id="qrModalCustom{{ alumno.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered text-center">
-        <div class="modal-content card-glass text-white p-3">
-            <h5 class="fw-bold mb-3">{{ alumno.nombre }}</h5>
-            <div class="bg-white p-3 rounded-3 d-inline-block mx-auto mb-2">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ alumno.qr_code }}" alt="QR" class="img-fluid">
-            </div>
-            <p class="font-monospace text-muted small mb-3">{{ alumno.qr_code }}</p>
-            <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ alumno.qr_code }}" target="_blank" class="btn btn-indigo w-100">Descargar QR</a>
-        </div>
-    </div>
-</div>
-{% endfor %}
-
-<!-- MODAL REGISTRO ALUMNO -->
+<!-- MODAL NUEVO ALUMNO -->
 <div class="modal fade" id="newStudentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content card-glass text-white border-secondary">
             <form action="{{ url_for('admin.create_student') }}" method="POST">
                 <div class="modal-header border-bottom border-secondary">
-                    <h5 class="modal-title fw-bold text-white">Nuevo Alumno</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold">Nuevo Alumno</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Nombre Completo</label>
-                        <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" required placeholder="Ej: Carlos López">
+                        <label class="form-label small fw-bold">Nombre</label>
+                        <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Teléfono (10 dígitos exactos)</label>
-                        <input type="tel" name="telefono" pattern="[0-9]{10}" maxlength="10" minlength="10" class="form-control bg-dark text-white border-secondary" required placeholder="Ej: 9611234567" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-                        <small class="text-muted" style="font-size: 0.75rem;">Solo números. Ejemplo: 9611234567</small>
+                        <label class="form-label small fw-bold">Teléfono (10 dígitos exactos)</label>
+                        <input type="tel" name="telefono" pattern="\d{10}" maxlength="10" minlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="form-control bg-dark text-white border-secondary" required placeholder="Ej: 9611234567">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Tipo de Membresía</label>
-                        <select name="tipo_alumno" class="form-select bg-dark text-white border-secondary">
-                            <option value="general">General (Acceso Físico QR)</option>
-                            <option value="custom">Personalizado (Web + Rutina/Dieta)</option>
+                        <label class="form-label small fw-bold">Tipo Membresía</label>
+                        <select name="tipo_alumno" class="form-select bg-dark text-white border-secondary" onchange="toggleCoach(this.value)">
+                            <option value="general">General (Solo Acceso Físico)</option>
+                            <option value="custom">Personalizado (Con Rutina y Coach)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="coachGroup">
+                        <label class="form-label small fw-bold">Asignar Coach</label>
+                        <select name="coach_id" class="form-select bg-dark text-white border-secondary">
+                            <option value="">Selecciona un Coach</option>
+                            {% for c in coaches %}
+                            <option value="{{ c.id }}">{{ c.nombre }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="row">
                         <div class="col-6 mb-3">
-                            <label class="form-label text-light small fw-bold">Días Membresía</label>
+                            <label class="form-label small fw-bold">Días</label>
                             <input type="number" name="dias_membresia" class="form-control bg-dark text-white border-secondary" value="30" required>
                         </div>
                         <div class="col-6 mb-3">
-                            <label class="form-label text-light small fw-bold">Monto ($)</label>
-                            <input type="number" step="0.01" name="monto" class="form-control bg-dark text-white border-secondary" value="500.00" required>
+                            <label class="form-label small fw-bold">Monto ($)</label>
+                            <input type="number" step="0.01" name="monto" class="form-control bg-dark text-white border-secondary" value="500" required>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Método de Pago</label>
+                        <select name="metodo_pago" class="form-select bg-dark text-white border-secondary">
+                            <option value="Efectivo">Efectivo 💵</option>
+                            <option value="Transferencia">Transferencia 💳</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="modal-footer border-top border-secondary justify-content-between">
-                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-indigo fw-bold">Guardar Alumno</button>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="submit" class="btn btn-indigo fw-bold w-100">Registrar y Cobrar</button>
                 </div>
             </form>
         </div>
@@ -404,36 +375,35 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const totalAlumnos = Number("{{ total_alumnos }}") || 0;
-        const vencidos = Number("{{ vencidos }}") || 0;
-        const activos = totalAlumnos - vencidos;
+    function toggleCoach(val) {
+        const group = document.getElementById('coachGroup');
+        const select = group.querySelector('select');
+        if (val === 'custom') {
+            group.classList.remove('d-none');
+            select.required = true;
+        } else {
+            group.classList.add('d-none');
+            select.required = false;
+            select.value = "";
+        }
+    }
 
-        const ctx = document.getElementById('analyticsChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Alumnos Activos (Al día)', 'Membresías Vencidas'],
-                datasets: [{
-                    label: 'Cantidad',
-                    data: [activos, vencidos],
-                    backgroundColor: ['rgba(16, 185, 129, 0.75)', 'rgba(239, 68, 68, 0.75)'],
-                    borderColor: ['#10b981', '#ef4444'],
-                    borderWidth: 1.5,
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
-                    x: { grid: { display: false }, ticks: { color: '#ffffff', font: { weight: 'bold' } } }
-                }
-            }
+    document.getElementById('buscadorInscritos').addEventListener('keyup', function() {
+        let filtro = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.search-row-inscritos');
+        filas.forEach(fila => {
+            let texto = fila.textContent.toLowerCase();
+            fila.style.display = texto.includes(filtro) ? '' : 'none';
+        });
+    });
+
+    document.getElementById('buscadorVencidos').addEventListener('keyup', function() {
+        let filtro = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.search-row-vencidos');
+        filas.forEach(fila => {
+            let texto = fila.textContent.toLowerCase();
+            fila.style.display = texto.includes(filtro) ? '' : 'none';
         });
     });
 </script>

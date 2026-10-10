@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from models import db, User
 from flask_bcrypt import Bcrypt
+from utils.security import desencriptar_dato
 
 auth_bp = Blueprint('auth', __name__)
 bcrypt = Bcrypt()
@@ -12,18 +13,25 @@ def login():
         identifier = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
         
-        user = User.query.filter(
-            (User.username == identifier) | (User.telefono == identifier)
-        ).first()
+        # Buscar primero por nombre de usuario (admin, coach)
+        user = User.query.filter_by(username=identifier).first()
         
+        # Si no existe por username, buscar desencriptando teléfonos de los alumnos
+        if not user:
+            all_users = User.query.all()
+            for u in all_users:
+                if desencriptar_dato(u.telefono) == identifier:
+                    user = u
+                    break
+
         if user and user.password_hash and bcrypt.check_password_hash(user.password_hash, password):
             if user.role == 'student_general':
-                flash('Los alumnos generales solo tienen acceso físico mediante QR. Contacta a la recepción para cambiar a Alumno Personalizado.', 'warning')
+                flash('Los alumnos generales solo tienen acceso físico mediante QR. Contacta a recepción.', 'warning')
                 return render_template('auth/login.html')
 
             hoy = datetime.now().date()
             if user.role == 'student_custom' and user.fecha_vencimiento and user.fecha_vencimiento < hoy:
-                flash(f'Tu membresía venció el {user.fecha_vencimiento}. Acude a recepción para renovarla y recuperar acceso a tu plataforma.', 'danger')
+                flash(f'Tu membresía venció el {user.fecha_vencimiento}. Acude a recepción para renovarla.', 'danger')
                 return render_template('auth/login.html')
 
             session['user_id'] = user.id
@@ -35,9 +43,13 @@ def login():
             elif user.role == 'coach':
                 return redirect(url_for('coach.dashboard'))
             elif user.role == 'student_custom':
-                return redirect(url_for('student.portal'))
+                # Soporte para ambas posibles rutas de alumno
+                try:
+                    return redirect(url_for('student.portal'))
+                except Exception:
+                    return redirect(url_for('student.dashboard'))
         
-        flash('Usuario o contraseña incorrectos.', 'danger')
+        flash('Usuario o contraseña incorrectos. Por favor, acércate a recepción.', 'danger')
     return render_template('auth/login.html')
 
 @auth_bp.route('/logout')
@@ -50,15 +62,19 @@ def check_user():
     data = request.get_json()
     identifier = data.get('username', '').strip()
     
-    user = User.query.filter(
-        (User.username == identifier) | (User.telefono == identifier)
-    ).first()
+    user = User.query.filter_by(username=identifier).first()
+    if not user:
+        all_users = User.query.all()
+        for u in all_users:
+            if desencriptar_dato(u.telefono) == identifier:
+                user = u
+                break
     
     if not user:
         return jsonify({'exists': False, 'message': 'El usuario o número de teléfono no existe en la base de datos.'}), 404
         
     if user.role == 'student_general':
-        return jsonify({'exists': False, 'message': 'Este alumno es "General". Pídele a Recepción que te cambie a "Personalizado" para tener acceso web.'}), 400
+        return jsonify({'exists': False, 'message': 'Este alumno es "General". Pídele a Recepción que te cambie a "Personalizado".'}), 400
         
     return jsonify({'exists': True, 'nombre': user.nombre})
 
@@ -74,20 +90,22 @@ def reset_password_qr():
         if not master_user or master_user.role not in ['admin', 'coach']:
             return jsonify({'success': False, 'message': 'QR Maestro no válido o no autorizado'}), 403
             
-        student = User.query.filter(
-            (User.username == identifier) | (User.telefono == identifier)
-        ).first()
+        student = User.query.filter_by(username=identifier).first()
+        if not student:
+            all_users = User.query.all()
+            for u in all_users:
+                if desencriptar_dato(u.telefono) == identifier:
+                    student = u
+                    break
         
         if not student:
             return jsonify({'success': False, 'message': 'Usuario o teléfono no encontrado en el sistema'}), 404
             
         student.password_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
-        
         if not student.username:
-            student.username = student.telefono
+            student.username = desencriptar_dato(student.telefono)
             
         db.session.commit()
-        
         return jsonify({'success': True, 'message': 'Contraseña actualizada con éxito. Ya puedes iniciar sesión.'})
         
     return render_template('auth/reset_qr.html')

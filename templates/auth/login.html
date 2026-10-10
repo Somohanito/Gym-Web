@@ -7,27 +7,27 @@
         
         <!-- LOGO Y TÍTULO DE GYMWEB -->
         <div class="text-center mb-4">
-    <div class="mb-2">
-        <span style="font-size: 2.5rem; display: inline-block;">❚█══█❚</span>
-    </div>
-    <h3 class="fw-bold text-white mb-1">Bienvenido a <span style="color: #818cf8;">H&L Sport Gym</span></h3>
-    <p class="text-light small opacity-75">Ingresa tus credenciales para acceder a la plataforma</p>
-</div>
+            <div class="mb-2">
+                <span style="font-size: 2.5rem; display: inline-block;">❚█══█❚</span>
+            </div>
+            <h3 class="fw-bold text-white mb-1">Bienvenido a <span style="color: #818cf8;">H&L Sport Gym</span></h3>
+            <p class="text-light small opacity-75">Ingresa tus credenciales para acceder a la plataforma</p>
+        </div>
 
-        <!-- ALERTAS DE FLASK -->
+        <!-- ALERTAS DE FLASK CON TEXTO NEGRO FORZADO PARA VISIBILIDAD -->
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <div class="alert alert-{{ category }} alert-dismissible fade show p-2 small mb-3 text-start" role="alert" style="border-radius: 10px;">
+              <div class="alert alert-{{ category }} alert-dismissible fade show p-2 small mb-3 text-start text-dark fw-bold shadow-sm" role="alert" style="border-radius: 10px;">
                 {{ message }}
-                <button type="button" class="btn-close btn-close-white p-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close p-2" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>
             {% endfor %}
           {% endif %}
         {% endwith %}
 
         <!-- FORMULARIO DE ACCESO -->
-        <form action="{{ url_for('auth.login') }}" method="POST">
+        <form action="{{ url_for('auth.login') }}" method5="POST" method="POST">
             <div class="form-floating mb-3">
                 <input type="text" name="username" class="form-control glass-input" id="loginUser" placeholder="Usuario o Teléfono" required autocomplete="off">
                 <label for="loginUser"><span class="me-2">👤</span>Usuario o Teléfono (10 dígitos)</label>

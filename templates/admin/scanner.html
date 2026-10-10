@@ -1,55 +1,96 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-7 mb-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">📷 Escáner de Acceso Kiosco</h5>
-                <span class="badge bg-success" id="camera-status">Cámara Activa</span>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 animate-fade-up">
+    <div>
+        <h3 class="fw-bold text-white mb-0">📲 Control de Acceso Automático</h3>
+        <p class="text-muted small mb-0">Escáner QR en vivo y bitácora de entradas de hoy.</p>
+    </div>
+    <!-- BOTÓN EXCLUSIVO PARA DESCARGAR EL EXCEL DE ACCESOS Y ENTRADAS -->
+    <a href="{{ url_for('admin.export_access_excel') }}" class="btn btn-outline-info text-nowrap fw-bold shadow-sm">📊 Descargar Excel de Entradas y Accesos</a>
+</div>
+
+<div class="row g-4 animate-fade-up delay-1">
+    <!-- CÁMARA ESCÁNER -->
+    <div class="col-12 col-lg-5">
+        <div class="card shadow-sm border-0 bg-dark">
+            <div class="card-header bg-black text-white d-flex justify-content-between align-items-center border-secondary">
+                <span class="mb-0 fw-bold">📷 Escáner Kiosco</span>
+                <span class="badge bg-success pulse-badge">En Vivo</span>
             </div>
-            <div class="card-body text-center p-4">
-                <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden;"></div>
+            <div class="card-body text-center p-3">
+                <div id="reader" class="rounded overflow-hidden w-100 bg-black"></div>
                 
-                <!-- PANTALLA DE ESTADO DINÁMICA (VERDE / ROJA) -->
-                <div id="result-box" class="mt-4 p-4 rounded text-white d-none shadow">
-                    <h1 id="result-title" class="fw-bold display-6"></h1>
-                    <h3 id="result-name" class="mt-2"></h3>
-                    <p id="result-vencimiento" class="mb-0 fs-5"></p>
+                <!-- ESTADO DINÁMICO -->
+                <div id="result-box" class="mt-3 p-3 rounded text-white d-none shadow-lg">
+                    <h3 id="result-title" class="fw-bold mb-1"></h3>
+                    <h5 id="result-name" class="mb-0"></h5>
+                    <p id="result-vencimiento" class="small mb-0 opacity-75"></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-5">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-secondary text-white fw-bold">
-                📋 Últimos Accesos de Hoy
+    <!-- TABLA ÚLTIMOS ACCESOS -->
+    <div class="col-12 col-lg-7">
+        <div class="card shadow-sm border-secondary bg-dark h-100">
+            <div class="card-header bg-black text-white fw-bold border-secondary">
+                📋 Accesos Registrados Hoy (Se resetea diariamente)
             </div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush" id="attendance-list">
-                    {% for a in asistencias %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ a.student.nombre }}</strong>
-                            <small class="d-block text-muted">{{ a.timestamp.strftime('%H:%M:%S') }}</small>
-                        </div>
-                        <span class="badge {% if a.status == 'CONCEDIDO' %}bg-success{% else %}bg-danger{% endif %}">
-                            {{ a.status }}
-                        </span>
-                    </li>
-                    {% else %}
-                    <li class="list-group-item text-center text-muted py-3">No hay accesos registrados hoy.</li>
-                    {% endfor %}
-                </ul>
+            <div class="card-body p-0 table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-dark table-hover mb-0">
+                    <thead class="sticky-top bg-black">
+                        <tr>
+                            <th class="small text-muted">Hora</th>
+                            <th class="small text-muted">Nombre</th>
+                            <th class="small text-muted text-end">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in asistencias %}
+                        <tr>
+                            <td class="text-secondary small">{{ a.timestamp.strftime('%H:%M:%S') }}</td>
+                            <td class="text-white fw-bold">{{ a.student.nombre }}</td>
+                            <td class="text-end">
+                                <span class="badge {% if a.status == 'CONCEDIDO' %}bg-success{% else %}bg-danger{% endif %}">{{ a.status }}</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted py-4">Nadie ha ingresado hoy.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
+<!-- GRÁFICAS DE AFLUENCIA -->
+<div class="row g-4 mt-1 animate-fade-up delay-2">
+    <div class="col-12 col-md-6">
+        <div class="card card-glass p-3 border-0">
+            <h6 class="fw-bold text-white text-center mb-3">🔥 Horarios Más Concurridos (De Hoy)</h6>
+            <div style="height: 200px;"><canvas id="chartHoras"></canvas></div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card card-glass p-3 border-0">
+            <h6 class="fw-bold text-white text-center mb-3">📅 Días Más Concurridos (Semanal)</h6>
+            <div style="height: 200px;"><canvas id="chartDias"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- DATOS OCULTOS PARA GRÁFICAS -->
+<script type="application/json" id="dataHorasLabels">{{ horas_labels | tojson }}</script>
+<script type="application/json" id="dataHoras">{{ horas_data | tojson }}</script>
+<script type="application/json" id="dataDiasLabels">{{ dias_labels | tojson }}</script>
+<script type="application/json" id="dataDias">{{ dias_data | tojson }}</script>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const resultBox = document.getElementById('result-box');
     const resultTitle = document.getElementById('result-title');
@@ -61,7 +102,7 @@
         if (isProcessing) return;
         isProcessing = true;
 
-        fetch('/admin/validate-qr', {
+        fetch('/admin/verify-qr', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ qr_code: decodedText })
@@ -81,11 +122,11 @@
             resultName.innerText = data.nombre || 'Desconocido';
             resultVencimiento.innerText = data.vencimiento ? `Vencimiento: ${data.vencimiento}` : data.message;
 
-            // Ocultar la pantalla después de 3.5 segundos para permitir el siguiente escaneo
             setTimeout(() => {
                 resultBox.classList.add('d-none');
                 isProcessing = false;
-            }, 3500);
+                window.location.reload(); 
+            }, 2500);
         })
         .catch(err => {
             console.error(err);
@@ -98,6 +139,45 @@
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
         onScanSuccess
-    ).catch(err => alert("Error iniciando la cámara: " + err));
+    ).catch(err => console.log("Cámara iniciada o sin permisos"));
+
+    const chartHorasLabels = JSON.parse(document.getElementById('dataHorasLabels').textContent);
+    const chartHorasData = JSON.parse(document.getElementById('dataHoras').textContent);
+    const chartDiasLabels = JSON.parse(document.getElementById('dataDiasLabels').textContent);
+    const chartDiasData = JSON.parse(document.getElementById('dataDias').textContent);
+
+    const chartOptions = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { 
+            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+            x: { grid: { display: false }, ticks: { color: '#ffffff' } }
+        }
+    };
+
+    new Chart(document.getElementById('chartHoras').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: chartHorasLabels,
+            datasets: [{
+                data: chartHorasData,
+                borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                borderWidth: 2, fill: true, tension: 0.4
+            }]
+        },
+        options: chartOptions
+    });
+
+    new Chart(document.getElementById('chartDias').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: chartDiasLabels,
+            datasets: [{
+                data: chartDiasData,
+                backgroundColor: '#818cf8', borderRadius: 6
+            }]
+        },
+        options: chartOptions
+    });
 </script>
 {% endblock %}

@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from models import db, User, Routine
+from utils.security import desencriptar_dato
 import json
 
 coach_bp = Blueprint('coach', __name__, url_prefix='/coach')
@@ -19,10 +20,17 @@ def dashboard():
     coach_id = session.get('user_id')
     coach = User.query.get(coach_id)
     
-    alumnos = User.query.filter_by(role='student_custom').all()
+    # FORZAR A QUE EL COACH VEA SOLO A SUS ALUMNOS ESTRICTAMENTE
+    if session.get('role') == 'admin':
+        # Solo los verdaderos administradores pueden ver la lista global en esta vista
+        alumnos = User.query.filter_by(role='student_custom').all()
+    else:
+        # Los coaches (role='coach') ven única y exclusivamente a los alumnos con su coach_id
+        alumnos = User.query.filter_by(role='student_custom', coach_id=coach_id).all()
+        
     alumnos_data = []
-    
     for a in alumnos:
+        a.telefono_desencriptado = desencriptar_dato(a.telefono)
         rutinas = Routine.query.filter_by(student_id=a.id).all()
         total = len(rutinas)
         completadas = sum(1 for r in rutinas if r.completado)
@@ -41,6 +49,15 @@ def dashboard():
 @coach_required
 def assign_routine(student_id):
     student = User.query.get_or_404(student_id)
+    
+    # BLOQUEO DE SEGURIDAD: Evita que un coach modifique alumnos que no son suyos
+    # si intenta acceder a la URL directamente
+    coach_id_actual = session.get('user_id')
+    if session.get('role') != 'admin' and student.coach_id != coach_id_actual:
+        flash('No tienes permiso para modificar a un alumno que no te pertenece.', 'danger')
+        return redirect(url_for('coach.dashboard'))
+        
+    student.telefono_desencriptado = desencriptar_dato(student.telefono)
     coach_id = session.get('user_id')
     
     if request.method == 'POST':
@@ -51,7 +68,6 @@ def assign_routine(student_id):
         ejercicios = [e.strip() for e in ejercicios_raw if e.strip()]
         comidas = [c.strip() for c in comidas_raw if c.strip()]
         
-        # Eliminar rutina previa de ese día si existía para sobreescribir
         Routine.query.filter_by(student_id=student.id, dia_semana=dia_semana).delete()
         
         nueva_rutina = Routine(
@@ -65,7 +81,7 @@ def assign_routine(student_id):
         
         db.session.add(nueva_rutina)
         db.session.commit()
-        flash(f'Rutina para {dia_semana} asignada correctamente a {student.nombre}.', 'success')
+        flash(f'Rutina para {dia_semana} asignada a {student.nombre}.', 'success')
         return redirect(url_for('coach.assign_routine', student_id=student.id))
         
     rutinas = Routine.query.filter_by(student_id=student.id).all()
@@ -79,6 +95,13 @@ def assign_routine(student_id):
 @coach_required
 def delete_routine(routine_id):
     routine = Routine.query.get_or_404(routine_id)
+    
+    # BLOQUEO DE SEGURIDAD PARA BORRADO
+    coach_id_actual = session.get('user_id')
+    if session.get('role') != 'admin' and routine.coach_id != coach_id_actual:
+        flash('No tienes permiso para borrar rutinas que no creaste.', 'danger')
+        return redirect(url_for('coach.dashboard'))
+        
     student_id = routine.student_id
     db.session.delete(routine)
     db.session.commit()

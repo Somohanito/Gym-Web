@@ -1,8 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, send_file
 from models import db, User, Routine, Attendance
 from datetime import datetime, timedelta
 from flask_bcrypt import Bcrypt
+from utils.security import encriptar_dato, desencriptar_dato
 import random
+import pandas as pd
+from io import BytesIO
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 bcrypt = Bcrypt()
@@ -21,24 +24,39 @@ def admin_required(f):
 def dashboard():
     generales = User.query.filter_by(role='student_general').all()
     personalizados = User.query.filter_by(role='student_custom').all()
+    coaches = User.query.filter_by(role='coach').all()
     
+    for u in generales + personalizados:
+        u.telefono_desencriptado = desencriptar_dato(u.telefono)
+        
     hoy = datetime.now().date()
     total_alumnos = len(generales) + len(personalizados)
     
     vencidos = 0
-    ingresos_totales = 0.0
-    all_students = generales + personalizados
-    for s in all_students:
-        ingresos_totales += (s.monto_pago or 0.0)
+    ingresos_efectivo = 0.0
+    ingresos_transferencia = 0.0
+    
+    for s in generales + personalizados:
+        monto = (s.monto_pago or 0.0)
+        if getattr(s, 'metodo_pago', 'Efectivo') == 'Transferencia':
+            ingresos_transferencia += monto
+        else:
+            ingresos_efectivo += monto
+            
         if s.fecha_vencimiento and s.fecha_vencimiento < hoy:
             vencidos += 1
+            
+    ingresos_totales = ingresos_efectivo + ingresos_transferencia
             
     return render_template('admin/dashboard.html', 
                            generales=generales, 
                            personalizados=personalizados,
+                           coaches=coaches,
                            total_alumnos=total_alumnos,
                            vencidos=vencidos,
                            ingresos_totales=ingresos_totales,
+                           ingresos_efectivo=ingresos_efectivo,
+                           ingresos_transferencia=ingresos_transferencia,
                            hoy=hoy)
 
 @admin_bp.route('/create-student', methods=['POST'])
@@ -49,19 +67,16 @@ def create_student():
     tipo = request.form.get('tipo_alumno', 'general')
     dias = int(request.form.get('dias_membresia', 30))
     monto = float(request.form.get('monto', 500.0))
+    metodo_pago = request.form.get('metodo_pago', 'Efectivo')
+    coach_id = request.form.get('coach_id')
     
-    if len(telefono) != 10 or not telefono.isdigit():
-        flash('El teléfono debe tener 10 dígitos exactos.', 'danger')
-        return redirect(url_for('admin.dashboard'))
-        
     qr_code = f"GYM-C{random.randint(100000, 999999)}"
     fecha_venc = datetime.now().date() + timedelta(days=dias)
-    
     role = 'student_custom' if tipo == 'custom' else 'student_general'
     
     nuevo_alumno = User(
         nombre=nombre,
-        telefono=telefono,
+        telefono=encriptar_dato(telefono),
         role=role,
         username=telefono if tipo == 'custom' else None,
         password_hash=bcrypt.generate_password_hash("123456").decode('utf-8') if tipo == 'custom' else None,
@@ -69,9 +84,10 @@ def create_student():
         is_custom_student=(tipo == 'custom'),
         fecha_vencimiento=fecha_venc,
         monto_pago=monto,
-        estado_pago='Al día'
+        metodo_pago=metodo_pago,
+        estado_pago='Al día',
+        coach_id=int(coach_id) if coach_id and tipo == 'custom' else None
     )
-    
     db.session.add(nuevo_alumno)
     db.session.commit()
     flash(f'Alumno {nombre} registrado correctamente.', 'success')
@@ -83,6 +99,7 @@ def renew_student(student_id):
     student = User.query.get_or_404(student_id)
     dias = int(request.form.get('dias_membresia', 30))
     monto_nuevo = float(request.form.get('monto', 500.0))
+    metodo_pago = request.form.get('metodo_pago', 'Efectivo')
     
     hoy = datetime.now().date()
     if student.fecha_vencimiento and student.fecha_vencimiento >= hoy:
@@ -91,10 +108,10 @@ def renew_student(student_id):
         student.fecha_vencimiento = hoy + timedelta(days=dias)
         
     student.monto_pago = (student.monto_pago or 0.0) + monto_nuevo
+    student.metodo_pago = metodo_pago
     student.estado_pago = 'Al día'
-    
     db.session.commit()
-    flash(f'Membresía de {student.nombre} renovada por {dias} días (+${monto_nuevo}).', 'success')
+    flash(f'Membresía renovada con éxito.', 'success')
     return redirect(url_for('admin.dashboard'))
 
 @admin_bp.route('/edit-student/<int:student_id>', methods=['POST'])
@@ -102,64 +119,92 @@ def renew_student(student_id):
 def edit_student(student_id):
     student = User.query.get_or_404(student_id)
     student.nombre = request.form.get('nombre', '').strip()
-    student.telefono = request.form.get('telefono', '').strip()
+    tel = request.form.get('telefono', '').strip()
+    student.telefono = encriptar_dato(tel)
     
-    if student.role == 'student_custom':
-        student.username = student.telefono
+    tipo = request.form.get('tipo_alumno', 'general')
+    coach_id = request.form.get('coach_id')
+    
+    if tipo == 'custom':
+        student.role = 'student_custom'
+        student.is_custom_student = True
+        student.username = tel
+        student.coach_id = int(coach_id) if coach_id else None
+        if not student.password_hash:
+            student.password_hash = bcrypt.generate_password_hash("123456").decode('utf-8')
+    else:
+        student.role = 'student_general'
+        student.is_custom_student = False
+        student.coach_id = None
         
     db.session.commit()
-    flash(f'Información de {student.nombre} actualizada correctamente.', 'info')
+    flash(f'Información y plan de {student.nombre} actualizados.', 'info')
     return redirect(url_for('admin.dashboard'))
 
 @admin_bp.route('/delete-student/<int:student_id>', methods=['POST'])
 @admin_required
 def delete_student(student_id):
     student = User.query.get_or_404(student_id)
-    
-    Attendance.query.filter_by(student_id=student.id).delete()
-    Routine.query.filter_by(student_id=student.id).delete()
-    
     db.session.delete(student)
     db.session.commit()
-    flash(f'Alumno {student.nombre} eliminado correctamente.', 'success')
+    flash(f'Alumno eliminado.', 'success')
     return redirect(url_for('admin.dashboard'))
 
-@admin_bp.route('/toggle-student-type/<int:student_id>', methods=['POST'])
+# EXCEL EXCLUSIVO DE INGRESOS Y CONTABILIDAD DESDE EL DASHBOARD
+@admin_bp.route('/export-excel')
 @admin_required
-def toggle_student_type(student_id):
-    student = User.query.get_or_404(student_id)
-    if student.role == 'student_general':
-        student.role = 'student_custom'
-        student.is_custom_student = True
-        student.username = student.telefono
-        if not student.password_hash:
-            student.password_hash = bcrypt.generate_password_hash("123456").decode('utf-8')
-    else:
-        student.role = 'student_general'
-        student.is_custom_student = False
-        
-    db.session.commit()
-    flash(f'Tipo de membresía de {student.nombre} actualizado.', 'info')
-    return redirect(url_for('admin.dashboard'))
-
-@admin_bp.route('/simulate-expiration/<int:student_id>/<mode>', methods=['POST'])
-@admin_required
-def simulate_expiration(student_id, mode):
-    student = User.query.get_or_404(student_id)
+def export_excel():
+    alumnos = User.query.filter(User.role.in_(['student_general', 'student_custom'])).all()
     hoy = datetime.now().date()
-    
-    if mode == 'expired':
-        student.fecha_vencimiento = hoy - timedelta(days=2)
-    elif mode == 'near':
-        student.fecha_vencimiento = hoy + timedelta(days=2)
-        
-    db.session.commit()
-    flash(f'Simulación aplicada a {student.nombre}.', 'warning')
-    return redirect(url_for('admin.dashboard'))
+    activos_data, vencidos_data = [], []
 
-# --- RUTAS DE GESTIÓN DE PERSONAL Y STAFF ---
+    for a in alumnos:
+        item = {
+            'ID': a.id,
+            'Nombre': a.nombre,
+            'Teléfono': desencriptar_dato(a.telefono),
+            'Tipo': 'Personalizado' if a.is_custom_student else 'General',
+            'Monto Pagado ($)': getattr(a, 'monto_pago', 0),
+            'Método Pago': getattr(a, 'metodo_pago', 'Efectivo'),
+            'Vencimiento': a.fecha_vencimiento
+        }
+        if a.fecha_vencimiento and a.fecha_vencimiento < hoy:
+            vencidos_data.append(item)
+        else:
+            activos_data.append(item)
+
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        pd.DataFrame(activos_data).to_excel(writer, sheet_name='Ingresos Alumnos Activos', index=False)
+        pd.DataFrame(vencidos_data).to_excel(writer, sheet_name='Alumnos Vencidos', index=False)
+    
+    output.seek(0)
+    return send_file(output, download_name=f"Reporte_Ingresos_{hoy}.xlsx", as_attachment=True)
+
+# EXCEL EXCLUSIVO DE ACCESOS Y ENTRADAS DESDE CONTROL DE ACCESO
+@admin_bp.route('/export-access-excel')
+@admin_required
+def export_access_excel():
+    hoy = datetime.now().date()
+    asistencias = Attendance.query.order_by(Attendance.timestamp.desc()).all()
+    accesos_data = []
+
+    for asc in asistencias:
+        accesos_data.append({
+            'Fecha y Hora': asc.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'Nombre de Alumno': asc.student.nombre if asc.student else 'Desconocido',
+            'Teléfono': desencriptar_dato(asc.student.telefono) if asc.student else 'N/A',
+            'Estado del Acceso': asc.status
+        })
+
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        pd.DataFrame(accesos_data).to_excel(writer, sheet_name='Historial de Accesos', index=False)
+    
+    output.seek(0)
+    return send_file(output, download_name=f"Reporte_Accesos_Entradas_{hoy}.xlsx", as_attachment=True)
+
 @admin_bp.route('/staff', methods=['GET', 'POST'])
-@admin_bp.route('/staff-management', methods=['GET', 'POST'])
 @admin_required
 def staff():
     if request.method == 'POST':
@@ -172,110 +217,90 @@ def staff():
         qr_code = f"GYM-M{random.randint(100000, 999999)}"
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         
-        staff_member = User(
-            nombre=nombre,
-            telefono=telefono,
-            role=role,
-            username=username,
-            password_hash=password_hash,
-            qr_code=qr_code
+        nuevo_staff = User(
+            nombre=nombre, telefono=encriptar_dato(telefono), role=role,
+            username=username, password_hash=password_hash, qr_code=qr_code
         )
-        db.session.add(staff_member)
+        db.session.add(nuevo_staff)
         db.session.commit()
-        flash(f'Miembro de personal {nombre} registrado.', 'success')
+        flash(f'Usuario {nombre} registrado.', 'success')
         return redirect(url_for('admin.staff'))
         
     staff_members = User.query.filter(User.role.in_(['admin', 'coach'])).all()
-    return render_template('admin/staff.html', staff=staff_members)
-
-@admin_bp.route('/staff-management-alias', methods=['GET', 'POST'])
-@admin_required
-def staff_management():
-    return staff()
-
-@admin_bp.route('/create-staff', methods=['POST'])
-@admin_required
-def create_staff():
-    return staff()
+    for s in staff_members:
+        s.telefono_desencriptado = desencriptar_dato(s.telefono)
+        
+    current_user = User.query.get(session.get('user_id'))
+    return render_template('admin/staff.html', staff=staff_members, current_user=current_user)
 
 @admin_bp.route('/delete-staff/<int:staff_id>', methods=['POST'])
 @admin_required
 def delete_staff(staff_id):
     staff_member = User.query.get_or_404(staff_id)
     if staff_member.id == session.get('user_id'):
-        flash('No puedes eliminar tu propia cuenta de administrador actual.', 'danger')
+        flash('No puedes eliminar tu propia cuenta.', 'danger')
         return redirect(url_for('admin.staff'))
         
     db.session.delete(staff_member)
     db.session.commit()
-    flash('Personal eliminado correctamente.', 'success')
+    flash('Usuario eliminado correctamente.', 'success')
     return redirect(url_for('admin.staff'))
 
-# --- RUTAS DEL ESCÁNER Y CONTROL DE ACCESO QR ---
 @admin_bp.route('/scanner')
 @admin_bp.route('/access-control')
 @admin_required
-def scanner():
-    return render_template('admin/scanner.html')
-
-@admin_bp.route('/access-control-alias')
-@admin_required
 def access_control():
-    return scanner()
+    hoy = datetime.now().date()
+    hoy_start = datetime.combine(hoy, datetime.min.time())
+    
+    # 1. Asistencias estrictamente de HOY para la tabla y la gráfica de horas
+    asistencias_hoy = Attendance.query.filter(Attendance.timestamp >= hoy_start).order_by(Attendance.timestamp.desc()).all()
+    
+    # Gráfica de HORAS: Se calcula únicamente con las entradas de HOY (se resetea al día)
+    horas_dict = {str(i).zfill(2)+":00": 0 for i in range(5, 24)}
+    for a in asistencias_hoy:
+        hora_str = a.timestamp.strftime('%H:00')
+        if hora_str in horas_dict:
+            horas_dict[hora_str] += 1
+            
+    # Gráfica de DÍAS: Se calcula con el acumulado de la semana actual (Lunes a Domingo)
+    inicio_semana = hoy - timedelta(days=hoy.weekday()) # Lunes de esta semana
+    inicio_semana_dt = datetime.combine(inicio_semana, datetime.min.time())
+    asistencias_semana = Attendance.query.filter(Attendance.timestamp >= inicio_semana_dt).all()
+    
+    dias_dict = {'Lunes': 0, 'Martes': 0, 'Miércoles': 0, 'Jueves': 0, 'Viernes': 0, 'Sábado': 0, 'Domingo': 0}
+    dias_map = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+    
+    for a in asistencias_semana:
+        dia_nombre = dias_map[a.timestamp.weekday()]
+        dias_dict[dia_nombre] += 1
+        
+    return render_template('admin/scanner.html', 
+                           asistencias=asistencias_hoy, 
+                           horas_labels=list(horas_dict.keys()), 
+                           horas_data=list(horas_dict.values()),
+                           dias_labels=list(dias_dict.keys()), 
+                           dias_data=list(dias_dict.values()))
 
 @admin_bp.route('/verify-qr', methods=['POST'])
 @admin_required
 def verify_qr():
     data = request.get_json()
     qr_code = data.get('qr_code', '').strip()
-    
     student = User.query.filter_by(qr_code=qr_code).first()
     if not student:
-        return jsonify({'status': 'error', 'message': 'Código QR no reconocido en el sistema.'}), 404
+        return jsonify({'status': 'error', 'message': 'Código QR no reconocido.'}), 404
         
     hoy = datetime.now().date()
     is_valid = student.fecha_vencimiento and student.fecha_vencimiento >= hoy
+    estado_acceso = 'CONCEDIDO' if is_valid else 'DENEGADO'
     
-    asistencia = Attendance(
-        student_id=student.id,
-        status='Acceso Permitido' if is_valid else 'Acceso Denegado (Vencido)'
-    )
+    asistencia = Attendance(student_id=student.id, status=estado_acceso)
     db.session.add(asistencia)
     db.session.commit()
     
-    if is_valid:
-        return jsonify({
-            'status': 'success',
-            'message': f'¡Bienvenido/a {student.nombre}!',
-            'nombre': student.nombre,
-            'vencimiento': str(student.fecha_vencimiento)
-        })
-    else:
-        return jsonify({
-            'status': 'denied',
-            'message': f'Acceso denegado: Membresía de {student.nombre} vencida el {student.fecha_vencimiento}.',
-            'nombre': student.nombre,
-            'vencimiento': str(student.fecha_vencimiento)
-        })
-
-# --- RUTAS DE WHATSAPP Y ALERTAS ---
-@admin_bp.route('/whatsapp')
-@admin_bp.route('/whatsapp-reminders')
-@admin_required
-def whatsapp():
-    hoy = datetime.now().date()
-    # Consulta unificada para alumnos a vencer o ya vencidos
-    alumnos_alertas = User.query.filter(
-        User.role.in_(['student_general', 'student_custom']),
-        User.fecha_vencimiento != None,
-        User.fecha_vencimiento <= hoy + timedelta(days=3)
-    ).all()
-    
-    return render_template('admin/whatsapp.html', 
-                           alumnos=alumnos_alertas, 
-                           hoy=hoy)
-
-@admin_bp.route('/whatsapp-reminders-alias')
-@admin_required
-def whatsapp_reminders():
-    return whatsapp()
+    return jsonify({
+        'status': estado_acceso,
+        'nombre': student.nombre,
+        'vencimiento': str(student.fecha_vencimiento) if is_valid else 'Membresía Vencida'
+    })

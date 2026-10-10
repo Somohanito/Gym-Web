@@ -2,37 +2,28 @@ from flask import Flask, redirect, url_for
 from config import Config
 from models import db
 from flask_bcrypt import Bcrypt
+from flask_migrate import Migrate  # <--- Importamos Migrate
 
 app = Flask(__name__)
 app.config.from_object(Config)
-from config import Config
 
-# Cargar la configuración en la app Flask
-app.config.from_object(Config)
-
-# Este procesador envía el nombre y logo a TODAS las plantillas HTML
-@app.context_processor
-def inject_gym_info():
-    return {
-        'gym_name': app.config.get('GYM_NAME', 'H&L Sport Gym'),
-        'gym_logo': app.config.get('GYM_LOGO_ICON', '❚█══█❚')
-    }
-
+# Inicializar Base de Datos, Cifrado y Migraciones
 db.init_app(app)
 bcrypt = Bcrypt(app)
+migrate = Migrate(app, db)  # <--- Conectamos Migrate con la App y la BD
 
-# REDIRECCIÓN AUTOMÁTICA DE LA RAÍZ AL LOGIN (Evita el error 404)
+# REDIRECCIÓN AUTOMÁTICA DE LA RAÍZ AL LOGIN
 @app.route('/')
 def index():
     return redirect(url_for('auth.login'))
 
-# INYECTOR GLOBAL DE CONFIGURACIÓN PARA JINJA2
+# INYECTOR GLOBAL DE CONFIGURACIÓN DEL GIMNASIO PARA JINJA2
 @app.context_processor
 def inject_gym_config():
     return dict(
-        gym_name=app.config.get('GYM_NAME', 'GymWeb'),
+        gym_name=app.config.get('GYM_NAME', 'H&L Sport Gym'),
         gym_slogan=app.config.get('GYM_SLOGAN', 'Tu mejor versión empieza hoy'),
-        gym_logo=app.config.get('GYM_LOGO_ICON', '⚡')
+        gym_logo=app.config.get('GYM_LOGO_ICON', '❚█══█❚')
     )
 
 # Registrar Blueprints

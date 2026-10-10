@@ -10,7 +10,6 @@
 </head>
 <body>
 <div id="screen-flash-overlay"></div>
-    <!-- NAVBAR CON CONTENEDOR FLUIDO PARA PEGAR EL LOGO A LA IZQUIERDA -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-minimal mb-4 sticky-top">
         <div class="container-fluid px-3">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2 m-0" href="#">
@@ -19,7 +18,7 @@
             </a>
 
             {% if session.get('user_id') %}
-            <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -30,13 +29,10 @@
                         <a class="nav-link px-3" href="{{ url_for('admin.dashboard') }}">Alumnos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ url_for('admin.staff_management') }}">Personal & Maestros</a>
+                        <a class="nav-link px-3" href="{{ url_for('admin.staff') }}">Usuarios</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ url_for('admin.access_control') }}">Control QR</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ url_for('admin.whatsapp_reminders') }}">WhatsApp Alerts</a>
+                        <a class="nav-link px-3" href="{{ url_for('admin.access_control') }}">Control de Acceso</a>
                     </li>
                     {% elif session.get('role') == 'coach' %}
                     <li class="nav-item">
@@ -72,17 +68,11 @@
     {% block scripts %}{% endblock %}
     <script>
     document.addEventListener('show.bs.modal', function (event) {
-        const modal = event.target;
-        document.body.appendChild(modal);
+        document.body.appendChild(event.target);
     });
-
     document.addEventListener('shown.bs.modal', function (event) {
-        const modal = event.target;
-        modal.style.zIndex = "1060";
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(b => {
-            b.style.zIndex = "1050";
-        });
+        event.target.style.zIndex = "1060";
+        document.querySelectorAll('.modal-backdrop').forEach(b => b.style.zIndex = "1050");
     });
     </script>
 </body>
