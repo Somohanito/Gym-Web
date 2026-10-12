@@ -7,7 +7,7 @@ class Config:
     GYM_LOGO_ICON = os.environ.get('GYM_LOGO_ICON', '❚█══█❚')
     
     # 2. CONFIGURACIÓN DE SEGURIDAD Y BASE DE DATOS (Protegidas por variables de entorno)
-    SECRET_KEY = os.environ.get('SECRET_KEY')
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-super-segura-para-local'
     FERNET_KEY = os.environ.get('FERNET_KEY')
     
     # Soporte automático para PostgreSQL (Render/Railway/Heroku) o SQLite local
