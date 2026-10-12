@@ -88,24 +88,7 @@ Panel del socio para consultar estado de membresía, código QR personal, rutina
 
 ## ⚙️ Instalación y Configuración Local
 
-```bash
-# 1. Clona el repositorio
-git clone [https://github.com/Somohanito/Gym-Web.git](https://github.com/Somohanito/Gym-Web.git)
-cd Gym-Web
 
-# 2. Crea y activa un entorno virtual
-python -m venv venv
-# En Windows:
-venv\Scripts\activate
-# En macOS/Linux:
-source venv/bin/activate
-
-# 3. Instala las dependencias
-pip install -r requirements.txt
-
-# 4. Ejecuta la aplicación
-python app.py
-```
 👨‍💻 Autor
 Axel Daniel Somohano
 Biomedical Engineer & Backend Developer
