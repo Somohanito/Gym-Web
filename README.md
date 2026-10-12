@@ -107,6 +107,6 @@ pip install -r requirements.txt
 python app.py
 ```
 ## 👨‍💻 Autor
-# Axel Daniel Somohano
-# Biomedical Engineer & Backend Developer
-# GitHub: @Somohanito ([https://github.com/Somohanito](https://github.com/Somohanito))
+ Axel Daniel Somohano
+ Biomedical Engineer & Backend Developer
+ GitHub: @Somohanito ([https://github.com/Somohanito](https://github.com/Somohanito))
