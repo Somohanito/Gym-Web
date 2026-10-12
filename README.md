@@ -1,10 +1,10 @@
-## 🚀 GymWeb SaaS
+##  GymWeb SaaS
 
 **GymWeb** es una plataforma modular para la administración integral de gimnasios y centros de acondicionamiento físico, diseñada con una arquitectura backend robusta para automatizar el control de accesos por códigos QR en tiempo real, gestión financiera, membresías y seguimiento de entrenamientos personalizados.
 
 ---
 
-## 📸 Módulos y Funcionalidades del Sistema
+##  Módulos y Funcionalidades del Sistema
 
 ### 1. Panel de Administración General
 Vista centralizada para administrar alumnos inscritos, filtrar membresías generales o personalizadas, dar de alta nuevos usuarios y supervisar pagos[cite: 10, 14].
@@ -113,7 +113,3 @@ python app.py
 Axel Daniel Somohano
 Biomedical Engineer & Backend Developer
 GitHub: @Somohanito (https://github.com/Somohanito)
-
-```
-
-```
