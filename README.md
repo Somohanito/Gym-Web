@@ -105,8 +105,8 @@ pip install -r requirements.txt
 
 # 4. Ejecuta la aplicación
 python app.py
-
-# 👨‍💻 Autor
-# Axel Daniel Somohano
-# Biomedical Engineer & Backend Developer
-# GitHub: @Somohanito ([https://github.com/Somohanito](https://github.com/Somohanito))
+```
+## 👨‍💻 Autor
+## Axel Daniel Somohano
+## Biomedical Engineer & Backend Developer
+## GitHub: @Somohanito ([https://github.com/Somohanito](https://github.com/Somohanito))
