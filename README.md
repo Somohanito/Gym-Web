@@ -1,3 +1,4 @@
+```markdown
 ## 🚀 GymWeb SaaS
 
 **GymWeb** es una plataforma modular para la administración integral de gimnasios y centros de acondicionamiento físico, diseñada con una arquitectura backend robusta para automatizar el control de accesos por códigos QR en tiempo real, gestión financiera, membresías y seguimiento de entrenamientos personalizados.
@@ -10,7 +11,7 @@
 Vista centralizada para administrar alumnos inscritos, filtrar membresías generales o personalizadas, dar de alta nuevos usuarios y supervisar pagos[cite: 10, 14].
 
 <p align="center">
-  <img src="assets/dashboard_admin.jpg" alt="Dashboard Admin" width="90%"/>
+  <img src="assets/dashboard_admin.png" alt="Dashboard Admin" width="90%"/>
 </p>
 
 ---
@@ -19,7 +20,7 @@ Vista centralizada para administrar alumnos inscritos, filtrar membresías gener
 Módulo en tiempo real con escáner de códigos QR y bitácora de entradas, incluyendo gráficas dinámicas de afluencia por hora y días de la semana[cite: 15].
 
 <p align="center">
-  <img src="assets/dashboard_QR.jpg" alt="Control de Acceso QR" width="90%"/>
+  <img src="assets/dashboard_QR.png" alt="Control de Acceso QR" width="90%"/>
 </p>
 
 ---
@@ -28,7 +29,7 @@ Módulo en tiempo real con escáner de códigos QR y bitácora de entradas, incl
 Panel financiero que calcula ingresos históricos totales, divididos por método de pago (Efectivo vs. Transferencia) con exportación de reportes a Excel[cite: 13].
 
 <p align="center">
-  <img src="assets/dashboard_ingresos.jpg" alt="Módulo de Ingresos" width="90%"/>
+  <img src="assets/dashboard_ingresos.png" alt="Módulo de Ingresos" width="90%"/>
 </p>
 
 ---
@@ -37,7 +38,7 @@ Panel financiero que calcula ingresos históricos totales, divididos por método
 Alternancia fluida entre membresías generales y personalizadas, mostrando el coach asignado, datos de contacto, vencimientos y acciones rápidas de edición o control[cite: 10, 14].
 
 <p align="center">
-  <img src="assets/dashboard_personalizado.jpg" alt="Membresías Personalizadas" width="90%"/>
+  <img src="assets/dashboard_personalizado.png" alt="Membresías Personalizadas" width="90%"/>
 </p>
 
 ---
@@ -46,7 +47,7 @@ Alternancia fluida entre membresías generales y personalizadas, mostrando el co
 Sistema automatizado de alertas para identificar socios con pagos atrasados[cite: 19].
 
 <p align="center">
-  <img src="assets/dashboard_vencidos.jpg" alt="Alumnos Vencidos" width="90%"/>
+  <img src="assets/dashboard_vencidos.png" alt="Alumnos Vencidos" width="90%"/>
 </p>
 
 ---
@@ -55,11 +56,11 @@ Sistema automatizado de alertas para identificar socios con pagos atrasados[cite
 Control de roles (`ADMIN` y `COACH`) con opciones de seguridad y códigos QR maestros de autorización presencial[cite: 16, 18].
 
 <p align="center">
-  <img src="assets/dashboard_usuarios.jpg" alt="Gestión de Usuarios" width="90%"/>
+  <img src="assets/dashboard_usuarios.png" alt="Gestión de Usuarios" width="90%"/>
 </p>
 
 <p align="center">
-  <img src="assets/dashboard_QR_Maestro.jpg" alt="QR Maestro" width="70%"/>
+  <img src="assets/dashboard_QR_Maestro.png" alt="QR Maestro" width="70%"/>
 </p>
 
 ---
@@ -68,7 +69,7 @@ Control de roles (`ADMIN` y `COACH`) con opciones de seguridad y códigos QR mae
 Supervisión de rendimiento semanal, cumplimiento de rutinas y asignación de planes de entrenamiento o dietas[cite: 12].
 
 <p align="center">
-  <img src="assets/dashboard_coach.jpg" alt="Panel de Entrenadores" width="90%"/>
+  <img src="assets/dashboard_coach.png" alt="Panel de Entrenadores" width="90%"/>
 </p>
 
 ---
@@ -77,11 +78,11 @@ Supervisión de rendimiento semanal, cumplimiento de rutinas y asignación de pl
 Panel del socio para consultar estado de membresía, código QR personal, rutina semanal y sistema de rachas con notificaciones al completar entrenamientos[cite: 11, 17].
 
 <p align="center">
-  <img src="assets/dashboard_alumno.jpg" alt="Dashboard Alumno" width="90%"/>
+  <img src="assets/dashboard_alumno.png" alt="Dashboard Alumno" width="90%"/>
 </p>
 
 <p align="center">
-  <img src="assets/dashboard_racha.jpg" alt="Entrenamiento Completado" width="70%"/>
+  <img src="assets/dashboard_racha.png" alt="Entrenamiento Completado" width="70%"/>
 </p>
 
 ---
@@ -105,8 +106,15 @@ pip install -r requirements.txt
 
 # 4. Ejecuta la aplicación
 python app.py
+
 ```
+
 ## 👨‍💻 Autor
- Axel Daniel Somohano
- Biomedical Engineer & Backend Developer
- GitHub: @Somohanito ([https://github.com/Somohanito](https://github.com/Somohanito))
+
+Axel Daniel Somohano
+Biomedical Engineer & Backend Developer
+GitHub: @Somohanito (https://github.com/Somohanito)
+
+```
+
+```
