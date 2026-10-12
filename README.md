@@ -1,25 +1,13 @@
 ## 🚀 GymWeb SaaS
 
-**GymWeb** es una plataforma modular para la administración integral de gimnasios, desarrollada con arquitectura backend robusta para automatizar el control de accesos por códigos QR en tiempo real, gestión financiera, membresías y seguimiento de entrenamientos personalizados.
-
----
-
-## 🛠️ Stack Tecnológico
-
-<p align="center">
-  <img src="https://skillicons.dev/icons?i=python,flask,sqlite,postgresql,html,css,js,git,github,vscode&perline=5" />
-</p>
-
-- **Backend:** Python 3, Flask, Flask-SQLAlchemy, Flask-Bcrypt, Flask-Migrate
-- **Frontend:** HTML5, CSS3, JavaScript (ES6+), Jinja2 Templates, Bootstrap 5
-- **Bases de Datos:** SQLite (Desarrollo local), PostgreSQL (Producción)
+**GymWeb** es una plataforma modular para la administración integral de gimnasios y centros de acondicionamiento físico, diseñada con una arquitectura backend robusta para automatizar el control de accesos por códigos QR en tiempo real, gestión financiera, membresías y seguimiento de entrenamientos personalizados.
 
 ---
 
 ## 📸 Módulos y Funcionalidades del Sistema
 
 ### 1. Panel de Administración General
-Vista centralizada para administrar alumnos inscritos, filtrar membresías generales o personalizadas, dar de alta nuevos usuarios y supervisar pagos.
+Vista centralizada para administrar alumnos inscritos, filtrar membresías generales o personalizadas, dar de alta nuevos usuarios y supervisar pagos[cite: 10, 14].
 
 <p align="center">
   <img src="assets/dashboard_admin.jpg" alt="Dashboard Admin" width="90%"/>
@@ -28,7 +16,7 @@ Vista centralizada para administrar alumnos inscritos, filtrar membresías gener
 ---
 
 ### 2. Control de Acceso Automático por Código QR (Kiosco)
-Módulo en tiempo real con escáner de códigos QR y bitácora de entradas, incluyendo gráficas dinámicas de afluencia por hora y días de la semana.
+Módulo en tiempo real con escáner de códigos QR y bitácora de entradas, incluyendo gráficas dinámicas de afluencia por hora y días de la semana[cite: 15].
 
 <p align="center">
   <img src="assets/dashboard_QR.jpg" alt="Control de Acceso QR" width="90%"/>
@@ -37,7 +25,7 @@ Módulo en tiempo real con escáner de códigos QR y bitácora de entradas, incl
 ---
 
 ### 3. Gestión de Ingresos y Reportes Contables
-Panel financiero que calcula ingresos históricos totales, divididos por método de pago (Efectivo vs. Transferencia) con exportación de reportes a Excel.
+Panel financiero que calcula ingresos históricos totales, divididos por método de pago (Efectivo vs. Transferencia) con exportación de reportes a Excel[cite: 13].
 
 <p align="center">
   <img src="assets/dashboard_ingresos.jpg" alt="Módulo de Ingresos" width="90%"/>
@@ -46,7 +34,7 @@ Panel financiero que calcula ingresos históricos totales, divididos por método
 ---
 
 ### 4. Gestión de Alumnos y Filtrado por Membresía
-Alternancia fluida entre membresías generales y personalizadas, mostrando el coach asignado, datos de contacto, vencimientos y acciones rápidas de edición o control.
+Alternancia fluida entre membresías generales y personalizadas, mostrando el coach asignado, datos de contacto, vencimientos y acciones rápidas de edición o control[cite: 10, 14].
 
 <p align="center">
   <img src="assets/dashboard_personalizado.jpg" alt="Membresías Personalizadas" width="90%"/>
@@ -55,7 +43,7 @@ Alternancia fluida entre membresías generales y personalizadas, mostrando el co
 ---
 
 ### 5. Alumnos con Membresía Vencida
-Sistema automatizado de alertas para identificar socios con pagos atrasados.
+Sistema automatizado de alertas para identificar socios con pagos atrasados[cite: 19].
 
 <p align="center">
   <img src="assets/dashboard_vencidos.jpg" alt="Alumnos Vencidos" width="90%"/>
@@ -64,7 +52,7 @@ Sistema automatizado de alertas para identificar socios con pagos atrasados.
 ---
 
 ### 6. Panel de Gestión de Usuarios (Personal)
-Control de roles (`ADMIN` y `COACH`) con opciones de seguridad y códigos QR maestros de autorización presencial.
+Control de roles (`ADMIN` y `COACH`) con opciones de seguridad y códigos QR maestros de autorización presencial[cite: 16, 18].
 
 <p align="center">
   <img src="assets/dashboard_usuarios.jpg" alt="Gestión de Usuarios" width="90%"/>
@@ -77,7 +65,7 @@ Control de roles (`ADMIN` y `COACH`) con opciones de seguridad y códigos QR mae
 ---
 
 ### 7. Panel de Entrenadores (Coaches)
-Supervisión de rendimiento semanal, cumplimiento de rutinas y asignación de planes de entrenamiento o dietas.
+Supervisión de rendimiento semanal, cumplimiento de rutinas y asignación de planes de entrenamiento o dietas[cite: 12].
 
 <p align="center">
   <img src="assets/dashboard_coach.jpg" alt="Panel de Entrenadores" width="90%"/>
@@ -86,7 +74,7 @@ Supervisión de rendimiento semanal, cumplimiento de rutinas y asignación de pl
 ---
 
 ### 8. Portal del Alumno (Gamificación y Rachas)
-Panel del socio para consultar estado de membresía, código QR personal, rutina semanal y sistema de rachas con notificaciones al completar entrenamientos.
+Panel del socio para consultar estado de membresía, código QR personal, rutina semanal y sistema de rachas con notificaciones al completar entrenamientos[cite: 11, 17].
 
 <p align="center">
   <img src="assets/dashboard_alumno.jpg" alt="Dashboard Alumno" width="90%"/>
@@ -117,3 +105,8 @@ pip install -r requirements.txt
 
 # 4. Ejecuta la aplicación
 python app.py
+
+# 👨‍💻 Autor
+# Axel Daniel Somohano
+# Biomedical Engineer & Backend Developer
+# GitHub: @Somohanito ([https://github.com/Somohanito](https://github.com/Somohanito))
